@@ -11,34 +11,21 @@ import { resourceRoles } from '@/data/resources/resource-roles';
 import { sensitiveCostProfiles } from '@/data/resources/sensitive-cost-profiles';
 import { taskActivityRecords } from '@/data/task-execution/task-activity-records';
 import { taskExecutionRecords } from '@/data/task-execution/task-execution-records';
+import { buildAllocationUtilizationSnapshots, buildResourcePressureSnapshots } from '@/lib/resources/allocation-aggregators';
+import { buildHiringGapSnapshots } from '@/lib/resources/hiring-gap-builders';
 import { buildPersonTaskLoadAggregates } from '@/lib/task-execution/person-load-selectors';
 import { AvailabilityStatus, PersonResourceStatus } from '@/lib/types/people-resources';
+import {
+  availabilityOptions as sharedAvailabilityOptions,
+  commonViewModes,
+  peopleStatusOptions as sharedPeopleStatusOptions
+} from '@/lib/view-config/filter-options';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
   minimumFractionDigits: 0,
   maximumFractionDigits: 0
 });
-
-const viewModes = ['People view', 'Role view', 'Resource pool', 'Hiring gap'] as const;
-
-const statusOptions: Array<{ label: string; value: PersonResourceStatus | 'all' }> = [
-  { label: 'All status', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'On leave', value: 'on-leave' },
-  { label: 'Unavailable', value: 'unavailable' },
-  { label: 'Candidate', value: 'candidate' },
-  { label: 'Pipeline', value: 'pipeline' },
-  { label: 'Archived', value: 'archived' }
-];
-
-const availabilityOptions: Array<{ label: string; value: AvailabilityStatus | 'all' }> = [
-  { label: 'All availability', value: 'all' },
-  { label: 'Available', value: 'available' },
-  { label: 'Partially available', value: 'partially-available' },
-  { label: 'Fully allocated', value: 'fully-allocated' },
-  { label: 'Unavailable', value: 'unavailable' }
-];
 
 function personStatusTone(status: PersonResourceStatus) {
   if (status === 'active') return 'success' as const;
@@ -70,7 +57,7 @@ export function PeopleResourcesWorkbench() {
   const [selectedRole, setSelectedRole] = useState<string | 'all'>('all');
   const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>('all');
   const [selectedAvailability, setSelectedAvailability] = useState<AvailabilityStatus | 'all'>('all');
-  const [viewMode, setViewMode] = useState<(typeof viewModes)[number]>('People view');
+  const [viewMode, setViewMode] = useState<(typeof commonViewModes.resource)[number]>(commonViewModes.resource[0]);
 
   const filteredPeople = peopleResources.filter((person) => {
     if (selectedStatus !== 'all' && person.status !== selectedStatus) return false;
@@ -92,6 +79,11 @@ export function PeopleResourcesWorkbench() {
   const selectedPersonProfile = sensitiveCostProfiles.find((profile) => profile.personId === selectedPerson?.id);
   const personTaskLoads = buildPersonTaskLoadAggregates(peopleResources, taskExecutionRecords, taskActivityRecords);
   const selectedPersonTaskSummary = personTaskLoads.find((aggregate) => aggregate.personId === selectedPerson?.id);
+  const utilizationSnapshots = buildAllocationUtilizationSnapshots();
+  const selectedUtilizationSnapshot = utilizationSnapshots.find((snapshot) => snapshot.personId === selectedPerson?.id);
+  const resourcePressureSnapshots = buildResourcePressureSnapshots();
+  const selectedProjectPressure = resourcePressureSnapshots.filter((snapshot) => selectedPerson?.currentProjectIds.includes(snapshot.projectId));
+  const hiringGapSnapshots = buildHiringGapSnapshots();
 
   const totalPeople = peopleResources.length;
   const activePeople = peopleResources.filter((person) => person.status === 'active').length;
@@ -142,7 +134,7 @@ export function PeopleResourcesWorkbench() {
           <div className="min-w-[160px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Person status</label>
             <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as PersonResourceStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              {statusOptions.map((option) => (
+              {sharedPeopleStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -174,7 +166,7 @@ export function PeopleResourcesWorkbench() {
           <div className="min-w-[180px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Availability filter</label>
             <select value={selectedAvailability} onChange={(event) => setSelectedAvailability(event.target.value as AvailabilityStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              {availabilityOptions.map((option) => (
+              {sharedAvailabilityOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -184,7 +176,7 @@ export function PeopleResourcesWorkbench() {
           <div className="min-w-[280px] flex-1">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Display mode</label>
             <div className="flex flex-wrap gap-2">
-              {viewModes.map((mode) => (
+              {commonViewModes.resource.map((mode) => (
                 <button key={mode} type="button" onClick={() => setViewMode(mode)} className={`rounded-md border px-3 py-2 text-sm ${viewMode === mode ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>
                   {mode}
                 </button>
@@ -341,6 +333,16 @@ export function PeopleResourcesWorkbench() {
               <div className="mt-1 text-xs text-slate-500">{selectedPersonTaskSummary?.summaryText ?? 'No current task execution signal.'}</div>
             </div>
 
+            <div className="rounded-md border border-slate-200 p-3">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Resource pressure summary</div>
+              <div className="mt-2 text-sm text-slate-700">Allocation status: {selectedUtilizationSnapshot?.utilizationStatus ?? 'available'}</div>
+              <div className="mt-1 text-sm text-slate-700">Total allocation rate: {percentFormatter.format(selectedUtilizationSnapshot?.totalAllocationRate ?? 0)}</div>
+              <div className="mt-1 text-sm text-slate-700">
+                Related project pressure: {selectedProjectPressure.map((snapshot) => `${snapshot.projectId}(${snapshot.pressureLevel})`).join(', ') || 'No linked pressure snapshot'}
+              </div>
+              <div className="mt-1 text-xs text-slate-500">{selectedUtilizationSnapshot?.summary ?? 'Resource pressure summary is reserved for allocation aggregation.'}</div>
+            </div>
+
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
               <div className="text-xs uppercase tracking-wide text-amber-700">Sensitive cost placeholder</div>
               {selectedPersonProfile ? (
@@ -414,6 +416,40 @@ export function PeopleResourcesWorkbench() {
                     .map((allocation) => peopleResources.find((person) => person.id === allocation.personId)?.displayName ?? allocation.personId)
                     .join(', ') || 'No assigned people'}
                 </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="font-medium text-slate-900">Resource pressure explanation</h2>
+          <div className="mt-4 space-y-3 text-sm text-slate-700">
+            {resourcePressureSnapshots.map((snapshot) => (
+              <div key={snapshot.projectId} className="rounded-md border border-slate-200 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-slate-900">{manpowerProjects.find((project) => project.id === snapshot.projectId)?.name ?? snapshot.projectId}</div>
+                  <StatusBadge label={snapshot.pressureLevel} tone={snapshot.pressureLevel === 'high' ? 'danger' : snapshot.pressureLevel === 'medium' ? 'warning' : 'success'} />
+                </div>
+                <div className="mt-2">Overloaded: {snapshot.overloadedPeople} / Constrained: {snapshot.constrainedPeople}</div>
+                <div className="mt-1 text-xs text-slate-500">{snapshot.summary}</div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="font-medium text-slate-900">Hiring gap explanation</h2>
+          <div className="mt-4 space-y-3 text-sm text-slate-700">
+            {hiringGapSnapshots.slice(0, 5).map((snapshot, index) => (
+              <div key={`${snapshot.projectId}-${snapshot.roleId}-${index}`} className="rounded-md border border-slate-200 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-slate-900">{manpowerProjects.find((project) => project.id === snapshot.projectId)?.name ?? snapshot.projectId}</div>
+                  <StatusBadge label={snapshot.mismatchLevel} tone={snapshot.mismatchLevel === 'high' ? 'danger' : snapshot.mismatchLevel === 'medium' ? 'warning' : 'success'} />
+                </div>
+                <div className="mt-2">Demand: {snapshot.demandHeadcount} / Available: {snapshot.availableHeadcount}</div>
+                <div className="mt-1 text-xs text-slate-500">{snapshot.summary}</div>
               </div>
             ))}
           </div>

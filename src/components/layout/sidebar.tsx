@@ -1,18 +1,20 @@
 import Link from 'next/link';
 
 const navItems = [
-  ['Dashboard', '/dashboard'],
+  ['驾驶舱 / Dashboard', '/dashboard'],
   ['项目列表 / Projects', '/projects'],
   ['人力成本 / Manpower Cost', '/manpower-cost'],
   ['人员与资源 / People & Resources', '/people-resources'],
   ['任务执行 / Task Execution', '/task-execution'],
   ['项目进度 / Project Progress', '/project-progress'],
-  ['Tasks', '/tasks'],
-  ['Versions', '/versions'],
-  ['Docs Index', '/docs-index'],
-  ['Change Log', '/change-log'],
-  ['References', '/references'],
-  ['Settings', '/settings']
+  ['版本推进 / Version Governance', '/version-governance'],
+  ['管理驾驶舱 / Executive Dashboard', '/executive-dashboard'],
+  ['任务索引 / Tasks', '/tasks'],
+  ['版本索引 / Versions', '/versions'],
+  ['文档索引 / Docs Index', '/docs-index'],
+  ['变更记录 / Change Log', '/change-log'],
+  ['参考资料 / References', '/references'],
+  ['设置 / Settings', '/settings']
 ];
 
 export function Sidebar() {

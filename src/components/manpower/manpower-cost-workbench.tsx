@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { InfoCard } from '@/components/ui/info-card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { RuleContextPanel } from '@/components/shared/rule-context-panel';
+import { SnapshotContextPanel } from '@/components/shared/snapshot-context-panel';
 import { manpowerActualInputs } from '@/data/manpower/manpower-actual-inputs';
 import { manpowerComparisons } from '@/data/manpower/manpower-comparisons';
 import { manpowerPlanVersions } from '@/data/manpower/manpower-plan-versions';
@@ -13,8 +15,14 @@ import { projectAllocations } from '@/data/resources/project-allocations';
 import { projectStageTaskLinks } from '@/data/task-execution/project-stage-task-links';
 import { taskActivityRecords } from '@/data/task-execution/task-activity-records';
 import { taskExecutionRecords } from '@/data/task-execution/task-execution-records';
+import { buildManpowerActualInputAdapterResults } from '@/lib/manpower/actual-input-adapters';
+import { buildProjectCostComparisonSnapshots, buildStageCostComparisonSnapshots } from '@/lib/manpower/comparison-builders';
+import { buildManpowerCostSummary, buildRoleCostSnapshots } from '@/lib/manpower/cost-calculators';
+import { manpowerJsonImportContract } from '@/lib/manpower/json-import-contracts';
+import { buildAllocationWritebackPreviews } from '@/lib/resources/allocation-writeback-mappers';
 import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
 import { EngineerRoleConfig, ManpowerProjectStatus } from '@/lib/types/manpower';
+import { commonViewModes } from '@/lib/view-config/filter-options';
 
 const currencyFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'currency',
@@ -29,34 +37,6 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
   maximumFractionDigits: 1
 });
 
-const jsonImportExample = {
-  versionContext: {
-    projectId: 'project-pm-workbench',
-    compareVersionId: 'version-pmw-b1',
-    actualVersionId: 'version-pmw-r2'
-  },
-  roleFormulaParams: [
-    {
-      roleId: 'role-backend-p4',
-      overtimeFactor: 1.2,
-      monthlyCostAdjustment: 3000
-    }
-  ],
-  actualStageInputs: [
-    {
-      stageId: 'stage-pmw-3',
-      actualPersonDays: 80,
-      actualCost: 171600
-    }
-  ],
-  comparisonOverrides: [
-    {
-      stageId: 'stage-pmw-3',
-      riskNote: 'Development stage entered high volatility window'
-    }
-  ]
-};
-
 const projectStatusOptions: Array<{ label: string; value: ManpowerProjectStatus | 'all' }> = [
   { label: 'All status', value: 'all' },
   { label: 'Planning', value: 'planning' },
@@ -65,8 +45,6 @@ const projectStatusOptions: Array<{ label: string; value: ManpowerProjectStatus 
   { label: 'On hold', value: 'on-hold' },
   { label: 'Completed', value: 'completed' }
 ];
-
-const displayModes = ['Project view', 'Role view', 'Stage view'] as const;
 
 function formatCurrency(value: number) {
   return currencyFormatter.format(value);
@@ -94,7 +72,8 @@ export function ManpowerCostWorkbench() {
   const [selectedStatus, setSelectedStatus] = useState<ManpowerProjectStatus | 'all'>('all');
   const [selectedRoleId, setSelectedRoleId] = useState('all');
   const [selectedVersionId, setSelectedVersionId] = useState('all');
-  const [displayMode, setDisplayMode] = useState<(typeof displayModes)[number]>('Project view');
+  const manpowerViewModes = commonViewModes.progress.slice(0, 3) as ['项目视图 / Project View', '阶段视图 / Stage View', '风险视图 / Risk View'];
+  const [displayMode, setDisplayMode] = useState<(typeof manpowerViewModes)[number]>(manpowerViewModes[0]);
   const [roleDrafts, setRoleDrafts] = useState<EngineerRoleConfig[]>(manpowerRoleConfigs);
 
   const filteredProjects = manpowerProjects.filter((project) => {
@@ -176,9 +155,15 @@ export function ManpowerCostWorkbench() {
   );
   const taskWritebackProjectCount = new Set(taskWritebackPreview.map((record) => record.sourceProjectId)).size;
   const taskWritebackTaskCount = taskWritebackPreview.reduce((sum, record) => sum + record.sourceTaskIds.length, 0);
-  const taskWritebackPlannedDays = taskWritebackPreview.reduce((sum, record) => sum + record.aggregatedPlannedWorkDays, 0);
-  const taskWritebackActualDays = taskWritebackPreview.reduce((sum, record) => sum + record.aggregatedActualWorkDays, 0);
-  const taskWritebackEstimatedCost = taskWritebackPreview.reduce((sum, record) => sum + record.estimatedActualCost, 0);
+  const adapterResults = buildManpowerActualInputAdapterResults();
+  const costSummary = buildManpowerCostSummary();
+  const projectCostSnapshots = buildProjectCostComparisonSnapshots();
+  const stageCostSnapshots = buildStageCostComparisonSnapshots();
+  const roleCostSnapshots = buildRoleCostSnapshots();
+  const taskWritebackPlannedDays = costSummary.totalPlannedWorkDays;
+  const taskWritebackActualDays = costSummary.totalActualWorkDays;
+  const taskWritebackEstimatedCost = costSummary.totalActualCost;
+  const allocationWritebackPreview = buildAllocationWritebackPreviews();
 
   function updateRoleDraft(id: string, field: keyof EngineerRoleConfig, value: string) {
     setRoleDrafts((current) =>
@@ -280,7 +265,7 @@ export function ManpowerCostWorkbench() {
           <div className="min-w-[240px] flex-1">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Display mode</label>
             <div className="flex flex-wrap gap-2">
-              {displayModes.map((mode) => (
+              {manpowerViewModes.map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -593,9 +578,105 @@ export function ManpowerCostWorkbench() {
             <StatusBadge label="Placeholder" tone="muted" />
           </div>
           <pre className="mt-4 overflow-x-auto rounded-md bg-slate-900 p-4 text-xs leading-6 text-slate-200">
-            <code>{JSON.stringify(jsonImportExample, null, 2)}</code>
+            <code>{JSON.stringify(manpowerJsonImportContract, null, 2)}</code>
           </pre>
         </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="font-medium text-slate-900">Allocation basis preview</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Allocation-level write-back preview is reserved for later actual input adapter mapping from resource allocation into manpower actual input.
+          </p>
+          <div className="mt-4 space-y-3">
+            {allocationWritebackPreview.slice(0, 5).map((preview) => (
+              <div key={preview.id} className="rounded-md border border-slate-200 p-3 text-sm text-slate-700">
+                <div className="font-medium text-slate-900">{preview.projectId} / {preview.personId}</div>
+                <div className="mt-1">Actual work days: {preview.actualWorkDays}</div>
+                <div className="mt-1">Estimated cost: {formatCurrency(preview.estimatedActualCost)}</div>
+                <div className="mt-1 text-xs text-slate-500">{preview.notes}</div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="font-medium text-slate-900">Allocation rule note</h2>
+          <div className="mt-4 space-y-3 text-sm text-slate-700">
+            <div className="rounded-md bg-slate-50 p-3">
+              <div className="font-medium text-slate-900">Task to allocation mapping</div>
+              <p className="mt-1">`relatedAllocationIds` is used as the first-layer bridge from task execution into allocation-level actual effort.</p>
+            </div>
+            <div className="rounded-md bg-slate-50 p-3">
+              <div className="font-medium text-slate-900">Allocation to manpower mapping</div>
+              <p className="mt-1">Allocation preview will be consumed by the next manpower adapter layer instead of directly overwriting current mock actual inputs.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <article className="rounded-lg border border-slate-200 bg-white">
+          <div className="border-b border-slate-200 px-4 py-3">
+            <h2 className="font-medium text-slate-900">Project cost comparison snapshot</h2>
+            <p className="text-sm text-slate-500">Built from adapter results so plan vs actual vs variance is no longer only static comparison mock.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-left text-slate-600">
+                <tr>
+                  <th className="px-4 py-3">Project</th>
+                  <th className="px-4 py-3">Planned days</th>
+                  <th className="px-4 py-3">Actual days</th>
+                  <th className="px-4 py-3">Planned cost</th>
+                  <th className="px-4 py-3">Actual cost</th>
+                  <th className="px-4 py-3">Variance</th>
+                  <th className="px-4 py-3">Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projectCostSnapshots.map((snapshot) => (
+                  <tr key={snapshot.projectId} className="border-t border-slate-100">
+                    <td className="px-4 py-3">{manpowerProjects.find((project) => project.id === snapshot.projectId)?.name ?? snapshot.projectId}</td>
+                    <td className="px-4 py-3">{snapshot.plannedWorkDays}</td>
+                    <td className="px-4 py-3">{snapshot.actualWorkDays}</td>
+                    <td className="px-4 py-3">{formatCurrency(snapshot.plannedCost)}</td>
+                    <td className="px-4 py-3">{formatCurrency(snapshot.actualCost)}</td>
+                    <td className="px-4 py-3">{formatCurrency(snapshot.varianceCost)}</td>
+                    <td className="px-4 py-3"><StatusBadge label={snapshot.riskLevel} tone={comparisonTone(snapshot.riskLevel)} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="font-medium text-slate-900">Role cost snapshot</h2>
+          <div className="mt-4 space-y-3">
+            {roleCostSnapshots.slice(0, 5).map((snapshot) => (
+              <div key={snapshot.roleId} className="rounded-md border border-slate-200 p-3 text-sm text-slate-700">
+                <div className="font-medium text-slate-900">{snapshot.roleName}</div>
+                <div className="mt-1">Mapped actual days: {snapshot.mappedActualWorkDays}</div>
+                <div className="mt-1">Estimated actual cost: {formatCurrency(snapshot.estimatedActualCost)}</div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <RuleContextPanel
+          title="Calculation rules / 计算口径"
+          rules={[
+            { name: 'Task write-back to actual input', detail: '任务回写实际工天通过 actual input adapter 进入人力成本层，并与已有 actual input 取较大值形成保守口径。' },
+            { name: 'Allocation participation', detail: 'allocation write-back preview 作为第二来源参与 actual cost 估算，但当前不直接覆盖原始 mock 数据。' },
+            { name: 'Role rate conversion', detail: '默认使用角色日单价做工天成本估算，月成本字段仅作为后续更精细换算的保留位。' },
+            { name: 'Comparison output', detail: '统一输出项目层与阶段层 planned vs actual vs variance snapshot，供后续页面和导入链复用。' }
+          ]}
+        />
+        <SnapshotContextPanel title="Snapshot context / 快照口径" context={costSummary.snapshotContext} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-3">

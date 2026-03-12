@@ -1,12 +1,11 @@
 import { manpowerStagePlans } from '@/data/manpower/manpower-stage-plans';
-import { peopleResources } from '@/data/resources/people-resources';
 import { projectStageTaskLinks } from '@/data/task-execution/project-stage-task-links';
 import { taskActivityRecords } from '@/data/task-execution/task-activity-records';
 import { taskExecutionRecords } from '@/data/task-execution/task-execution-records';
-import { buildPersonTaskLoadAggregates } from '@/lib/task-execution/person-load-selectors';
 import { buildProjectExecutionAggregates } from '@/lib/task-execution/project-aggregate-selectors';
 import { buildStageExecutionAggregates } from '@/lib/task-execution/stage-aggregate-selectors';
 import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
+import { buildResourcePressureSnapshots } from '@/lib/resources/resource-pressure-builders';
 import {
   ProjectProgressSnapshot,
   ProjectProgressStatus,
@@ -45,15 +44,7 @@ function resolveStageStatus(input: {
 }
 
 function resolveResourcePressureLevel(projectId: string): ResourcePressureLevel {
-  const personLoads = buildPersonTaskLoadAggregates(peopleResources, taskExecutionRecords, taskActivityRecords);
-  const projectTaskOwners = new Set(
-    taskExecutionRecords.filter((task) => task.projectId === projectId).map((task) => task.ownerPersonId)
-  );
-  const relatedLoads = personLoads.filter((load) => projectTaskOwners.has(load.personId));
-
-  if (relatedLoads.some((load) => load.loadRiskLevel === 'high')) return 'high';
-  if (relatedLoads.some((load) => load.loadRiskLevel === 'medium')) return 'medium';
-  return 'low';
+  return buildResourcePressureSnapshots().find((snapshot) => snapshot.projectId === projectId)?.pressureLevel ?? 'low';
 }
 
 function buildLatestSummary(currentStageName: string | null, pressure: ResourcePressureLevel, baseSummary: string): string {

@@ -15,32 +15,21 @@ import { taskExecutionRecords } from '@/data/task-execution/task-execution-recor
 import { taskViewPresets } from '@/data/task-execution/task-view-presets';
 import { TaskPriority, TaskStatus } from '@/lib/types/task-execution';
 import { buildAllocationConsumptionAggregates } from '@/lib/task-execution/allocation-consumption-selectors';
+import { buildResourceAllocationAggregates } from '@/lib/resources/allocation-selectors';
+import { buildAllocationWritebackPreviews } from '@/lib/resources/allocation-writeback-mappers';
 import { buildPersonTaskLoadAggregates } from '@/lib/task-execution/person-load-selectors';
 import { buildProjectExecutionAggregates } from '@/lib/task-execution/project-aggregate-selectors';
 import { buildStageExecutionAggregates } from '@/lib/task-execution/stage-aggregate-selectors';
 import { buildTaskExecutionAggregates } from '@/lib/task-execution/task-aggregate-selectors';
 import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
 import { MOCK_TODAY } from '@/lib/task-execution/summary-builders';
+import { commonViewModes, taskStatusOptions as sharedTaskStatusOptions } from '@/lib/view-config/filter-options';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
   minimumFractionDigits: 0,
   maximumFractionDigits: 0
 });
-
-const viewModes = ['Project view', 'Person view', 'Stage view', 'Status view'] as const;
-
-const statusOptions: Array<{ label: string; value: TaskStatus | 'all' }> = [
-  { label: 'All status', value: 'all' },
-  { label: 'Not started', value: 'not-started' },
-  { label: 'Ready', value: 'ready' },
-  { label: 'In progress', value: 'in-progress' },
-  { label: 'Blocked', value: 'blocked' },
-  { label: 'At risk', value: 'at-risk' },
-  { label: 'Done', value: 'done' },
-  { label: 'Paused', value: 'paused' },
-  { label: 'Cancelled', value: 'cancelled' }
-];
 
 const priorityOptions: Array<{ label: string; value: TaskPriority | 'all' }> = [
   { label: 'All priority', value: 'all' },
@@ -70,7 +59,7 @@ export function TaskExecutionWorkbench() {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all');
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority | 'all'>('all');
   const [selectedOwnerId, setSelectedOwnerId] = useState<string | 'all'>('all');
-  const [viewMode, setViewMode] = useState<(typeof viewModes)[number]>('Project view');
+  const [viewMode, setViewMode] = useState<(typeof commonViewModes.task)[number]>(commonViewModes.task[0]);
 
   const filteredTasks = taskExecutionRecords.filter((task) => {
     if (selectedProjectId !== 'all' && task.projectId !== selectedProjectId) return false;
@@ -98,6 +87,8 @@ export function TaskExecutionWorkbench() {
   const projectAggregates = buildProjectExecutionAggregates(projectStageTaskLinks, taskExecutionRecords, taskActivityRecords, MOCK_TODAY);
   const personLoadAggregates = buildPersonTaskLoadAggregates(peopleResources, taskExecutionRecords, taskActivityRecords, MOCK_TODAY);
   const allocationAggregates = buildAllocationConsumptionAggregates(projectAllocations, taskExecutionRecords, taskActivityRecords, MOCK_TODAY);
+  const resourceAllocationAggregates = buildResourceAllocationAggregates();
+  const allocationWritebackPreviews = buildAllocationWritebackPreviews();
   const writebackRecords = buildTaskExecutionWritebackRecords(
     taskExecutionRecords,
     taskActivityRecords,
@@ -135,6 +126,7 @@ export function TaskExecutionWorkbench() {
   );
 
   const selectedTaskAggregate = taskAggregates.find((aggregate) => aggregate.taskId === selectedTask?.id);
+  const selectedTaskAllocationDetails = resourceAllocationAggregates.filter((aggregate) => selectedTask?.relatedAllocationIds.includes(aggregate.allocationId));
   const totalPlannedWorkDays = taskAggregates.reduce((sum, aggregate) => sum + aggregate.plannedWorkDays, 0);
   const totalActualWorkDays = taskAggregates.reduce((sum, aggregate) => sum + aggregate.normalizedActualWorkDays, 0);
   const readyWritebackCount = writebackRecords.filter((record) => record.writebackStatus === 'ready').length;
@@ -179,7 +171,7 @@ export function TaskExecutionWorkbench() {
           <div className="min-w-[160px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Status filter</label>
             <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as TaskStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              {statusOptions.map((option) => (
+              {sharedTaskStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -210,7 +202,7 @@ export function TaskExecutionWorkbench() {
           <div className="min-w-[260px] flex-1">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Display mode</label>
             <div className="flex flex-wrap gap-2">
-              {viewModes.map((mode) => (
+              {commonViewModes.task.map((mode) => (
                 <button key={mode} type="button" onClick={() => setViewMode(mode)} className={`rounded-md border px-3 py-2 text-sm ${viewMode === mode ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>
                   {mode}
                 </button>
@@ -341,6 +333,16 @@ export function TaskExecutionWorkbench() {
               <div className="mt-1">Normalized actual days: {selectedTaskAggregate?.normalizedActualWorkDays ?? 0}</div>
               <div className="mt-1">Latest record: {selectedTaskActivities[0]?.recordType ?? 'No record yet'}</div>
               <div className="mt-1">Latest comment: {selectedTaskActivities[0]?.comment ?? 'Execution log placeholder reserved for future input.'}</div>
+            </div>
+
+            <div className="rounded-md border border-slate-200 p-3 text-sm text-slate-700">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Allocation linkage summary</div>
+              <div className="mt-2">Related allocations: {selectedTaskAllocationDetails.length}</div>
+              <div className="mt-1">Allocation work days: {selectedTaskAllocationDetails.reduce((sum, item) => sum + item.actualWorkDays, 0)}</div>
+              <div className="mt-1">Conflict flags: {selectedTaskAllocationDetails.filter((item) => item.conflictFlag).length}</div>
+              <div className="mt-1 text-xs text-slate-500">
+                {selectedTaskAllocationDetails.map((item) => `${item.allocationId}:${Math.round(item.allocationRate * 100)}%`).join(' / ') || 'No allocation aggregate bound to this task.'}
+              </div>
             </div>
           </div>
         </article>
@@ -525,6 +527,16 @@ export function TaskExecutionWorkbench() {
                 {personLoadRows.slice(0, 3).map((aggregate) => (
                   <div key={aggregate.personId}>
                     {peopleResources.find((person) => person.id === aggregate.personId)?.displayName}: {aggregate.loadRiskLevel}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+              <div className="font-medium text-slate-900">Allocation linkage snapshot</div>
+              <div className="mt-2 space-y-1">
+                {allocationWritebackPreviews.slice(0, 3).map((preview) => (
+                  <div key={preview.id}>
+                    {preview.projectId} / {preview.personId}: {preview.actualWorkDays}d
                   </div>
                 ))}
               </div>
