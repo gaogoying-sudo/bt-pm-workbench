@@ -4,6 +4,8 @@ const navItems = [
   ['Dashboard', '/dashboard'],
   ['Projects', '/projects'],
   ['Manpower Cost', '/manpower-cost'],
+  ['People & Resources', '/people-resources'],
+  ['Task Execution', '/task-execution'],
   ['Tasks', '/tasks'],
   ['Versions', '/versions'],
   ['Docs Index', '/docs-index'],

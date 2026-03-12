@@ -1,0 +1,9 @@
+import { HiringDemandRecord } from '@/lib/types/people-resources';
+
+export const hiringDemands: HiringDemandRecord[] = [
+  { id: 'hire-001', roleId: 'res-role-backend', targetLevel: 'P4', demandSourceProjectId: 'project-ops-console', demandPhaseId: '联调测试', plannedStartDate: '2026-04-01', expectedDuration: '3 months', headcount: 1, urgency: 'high', status: 'recruiting', budgetRange: 'CNY 38k-46k / month', notes: 'Integration pressure requires an additional backend owner.' },
+  { id: 'hire-002', roleId: 'res-role-platform', targetLevel: 'P4-P5', demandSourceProjectId: 'project-pm-workbench', demandPhaseId: '发布上线', plannedStartDate: '2026-04-15', expectedDuration: '2 months', headcount: 1, urgency: 'medium', status: 'approved', budgetRange: 'CNY 40k-52k / month', notes: 'Release hardening and deployment reliability coverage.' },
+  { id: 'hire-003', roleId: 'res-role-ai', targetLevel: 'P5', demandSourceProjectId: 'project-ai-copilot', demandPhaseId: '开发实现', plannedStartDate: '2026-04-10', expectedDuration: '4 months', headcount: 1, urgency: 'high', status: 'interviewing', budgetRange: 'CNY 55k-72k / month', notes: 'Pilot needs a second AI engineer to reduce single point risk.' },
+  { id: 'hire-004', roleId: 'res-role-qa', targetLevel: 'P3', demandSourceProjectId: 'project-ops-console', demandPhaseId: '发布上线', plannedStartDate: '2026-05-01', expectedDuration: '6 weeks', headcount: 2, urgency: 'medium', status: 'pending', budgetRange: 'CNY 20k-28k / month', notes: 'Temporary release validation support for dense release windows.' },
+  { id: 'hire-005', roleId: 'res-role-fullstack', targetLevel: 'P3-P4', demandSourceProjectId: 'project-data-hub', demandPhaseId: '开发实现', plannedStartDate: '2026-05-10', expectedDuration: '3 months', headcount: 1, urgency: 'low', status: 'on-hold', budgetRange: 'CNY 28k-40k / month', notes: 'Only starts if the paused project scope is resumed.' }
+];

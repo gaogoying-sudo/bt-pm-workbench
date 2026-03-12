@@ -9,6 +9,11 @@ import { manpowerPlanVersions } from '@/data/manpower/manpower-plan-versions';
 import { manpowerProjects } from '@/data/manpower/manpower-projects';
 import { manpowerRoleConfigs } from '@/data/manpower/manpower-role-configs';
 import { manpowerStagePlans } from '@/data/manpower/manpower-stage-plans';
+import { projectAllocations } from '@/data/resources/project-allocations';
+import { projectStageTaskLinks } from '@/data/task-execution/project-stage-task-links';
+import { taskActivityRecords } from '@/data/task-execution/task-activity-records';
+import { taskExecutionRecords } from '@/data/task-execution/task-execution-records';
+import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
 import { EngineerRoleConfig, ManpowerProjectStatus } from '@/lib/types/manpower';
 
 const currencyFormatter = new Intl.NumberFormat('zh-CN', {
@@ -162,6 +167,18 @@ export function ManpowerCostWorkbench() {
       project: manpowerProjects.find((project) => project.id === record.projectId),
       stagePlan: manpowerStagePlans.find((stagePlan) => stagePlan.id === record.stageId)
     }));
+
+  const taskWritebackPreview = buildTaskExecutionWritebackRecords(
+    taskExecutionRecords,
+    taskActivityRecords,
+    projectStageTaskLinks,
+    projectAllocations
+  );
+  const taskWritebackProjectCount = new Set(taskWritebackPreview.map((record) => record.sourceProjectId)).size;
+  const taskWritebackTaskCount = taskWritebackPreview.reduce((sum, record) => sum + record.sourceTaskIds.length, 0);
+  const taskWritebackPlannedDays = taskWritebackPreview.reduce((sum, record) => sum + record.aggregatedPlannedWorkDays, 0);
+  const taskWritebackActualDays = taskWritebackPreview.reduce((sum, record) => sum + record.aggregatedActualWorkDays, 0);
+  const taskWritebackEstimatedCost = taskWritebackPreview.reduce((sum, record) => sum + record.estimatedActualCost, 0);
 
   function updateRoleDraft(id: string, field: keyof EngineerRoleConfig, value: string) {
     setRoleDrafts((current) =>
@@ -518,6 +535,31 @@ export function ManpowerCostWorkbench() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="font-medium text-slate-900">Task write-back preview</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Preview only. The figures below come from the task execution write-back mapper and are reserved for future manpower actual input integration.
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+              <div className="font-medium text-slate-900">Writable scope</div>
+              <div className="mt-2">Projects: {taskWritebackProjectCount}</div>
+              <div className="mt-1">Tasks: {taskWritebackTaskCount}</div>
+              <div className="mt-1">Status: mock preview</div>
+            </div>
+            <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+              <div className="font-medium text-slate-900">Aggregated work days</div>
+              <div className="mt-2">Planned: {taskWritebackPlannedDays}</div>
+              <div className="mt-1">Actual: {taskWritebackActualDays}</div>
+            </div>
+            <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+              <div className="font-medium text-slate-900">Estimated actual cost</div>
+              <div className="mt-2">{formatCurrency(taskWritebackEstimatedCost)}</div>
+              <div className="mt-1 text-xs text-slate-500">Built from task execution, activity and allocation records.</div>
+            </div>
+          </div>
+        </article>
+
         <article className="rounded-lg border border-slate-200 bg-white p-4">
           <h2 className="font-medium text-slate-900">JSON import guide</h2>
           <p className="mt-2 text-sm text-slate-600">
