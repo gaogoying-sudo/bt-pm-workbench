@@ -3,6 +3,7 @@ import Link from 'next/link';
 const navItems = [
   ['Dashboard', '/dashboard'],
   ['Projects', '/projects'],
+  ['Manpower Cost', '/manpower-cost'],
   ['Tasks', '/tasks'],
   ['Versions', '/versions'],
   ['Docs Index', '/docs-index'],
