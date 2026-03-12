@@ -2,10 +2,11 @@ import Link from 'next/link';
 
 const navItems = [
   ['Dashboard', '/dashboard'],
-  ['Projects', '/projects'],
-  ['Manpower Cost', '/manpower-cost'],
-  ['People & Resources', '/people-resources'],
-  ['Task Execution', '/task-execution'],
+  ['项目列表 / Projects', '/projects'],
+  ['人力成本 / Manpower Cost', '/manpower-cost'],
+  ['人员与资源 / People & Resources', '/people-resources'],
+  ['任务执行 / Task Execution', '/task-execution'],
+  ['项目进度 / Project Progress', '/project-progress'],
   ['Tasks', '/tasks'],
   ['Versions', '/versions'],
   ['Docs Index', '/docs-index'],
