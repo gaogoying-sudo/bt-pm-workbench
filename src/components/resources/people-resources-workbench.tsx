@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { InfoCard } from '@/components/ui/info-card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { SourceContextPanel } from '@/components/shared/source-context-panel';
 import { manpowerProjects } from '@/data/manpower/manpower-projects';
 import { hiringDemands } from '@/data/resources/hiring-demands';
 import { peopleResources } from '@/data/resources/people-resources';
@@ -120,19 +121,19 @@ export function PeopleResourcesWorkbench() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-4 xl:grid-cols-7">
-        <InfoCard title="Total people" value={totalPeople} />
-        <InfoCard title="Active people" value={activePeople} />
-        <InfoCard title="Candidate + hiring pool" value={candidateAndPipelineCount} />
-        <InfoCard title="Fully allocated" value={fullyAllocatedCount} />
-        <InfoCard title="Partially available" value={partiallyAvailableCount} />
-        <InfoCard title="Scarce roles" value={scarceRoleCount} />
-        <InfoCard title="Cross-project people" value={crossProjectCount} />
+        <InfoCard title="总人员数 / Total People" value={totalPeople} />
+        <InfoCard title="在岗人数 / Active People" value={activePeople} />
+        <InfoCard title="候选与招聘池 / Candidate + Hiring Pool" value={candidateAndPipelineCount} />
+        <InfoCard title="已满载人数 / Fully Allocated" value={fullyAllocatedCount} />
+        <InfoCard title="部分可投入 / Partially Available" value={partiallyAvailableCount} />
+        <InfoCard title="稀缺角色数 / Scarce Roles" value={scarceRoleCount} />
+        <InfoCard title="跨项目人数 / Cross-project People" value={crossProjectCount} />
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Person status</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">人员状态 / Person Status</label>
             <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as PersonResourceStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
               {sharedPeopleStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -142,9 +143,9 @@ export function PeopleResourcesWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Role filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">角色筛选 / Role Filter</label>
             <select value={selectedRole} onChange={(event) => setSelectedRole(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">All roles</option>
+              <option value="all">全部角色 / All Roles</option>
               {resourceRoles.map((role) => (
                 <option key={role.id} value={role.id}>
                   {role.name}
@@ -153,9 +154,9 @@ export function PeopleResourcesWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Project filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
             <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">All projects</option>
+              <option value="all">全部项目 / All Projects</option>
               {manpowerProjects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -164,7 +165,7 @@ export function PeopleResourcesWorkbench() {
             </select>
           </div>
           <div className="min-w-[180px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Availability filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">可用性筛选 / Availability Filter</label>
             <select value={selectedAvailability} onChange={(event) => setSelectedAvailability(event.target.value as AvailabilityStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
               {sharedAvailabilityOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -174,7 +175,7 @@ export function PeopleResourcesWorkbench() {
             </select>
           </div>
           <div className="min-w-[280px] flex-1">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Display mode</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">展示模式 / View Mode</label>
             <div className="flex flex-wrap gap-2">
               {commonViewModes.resource.map((mode) => (
                 <button key={mode} type="button" onClick={() => setViewMode(mode)} className={`rounded-md border px-3 py-2 text-sm ${viewMode === mode ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>
@@ -185,7 +186,7 @@ export function PeopleResourcesWorkbench() {
           </div>
         </div>
         <div className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Current mode: <span className="font-medium text-slate-900">{viewMode}</span>. The page is organized for project planning, staffing and allocation analysis rather than HR administration.
+          当前模式 / Current Mode: <span className="font-medium text-slate-900">{viewMode}</span>。本页围绕项目资源配置，而不是 HR 全功能档案。
         </div>
       </section>
 
@@ -193,25 +194,25 @@ export function PeopleResourcesWorkbench() {
         <article className="rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <div>
-              <h2 className="font-medium text-slate-900">People table</h2>
-              <p className="text-sm text-slate-500">Project-facing roster with role, load and availability context.</p>
+              <h2 className="font-medium text-slate-900">人员总表 / People Table</h2>
+              <p className="text-sm text-slate-500">面向项目管理视角查看角色归属、负载和可投入状态。</p>
             </div>
-            <StatusBadge label={`${filteredPeople.length} people`} tone="muted" />
+            <StatusBadge label={`${filteredPeople.length} 人 / people`} tone="muted" />
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Primary role</th>
-                  <th className="px-4 py-3">Level</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Projects</th>
-                  <th className="px-4 py-3">Utilization</th>
-                  <th className="px-4 py-3">Availability</th>
-                  <th className="px-4 py-3">Skill tags</th>
-                  <th className="px-4 py-3">Sensitive</th>
-                  <th className="px-4 py-3">Notes</th>
+                  <th className="px-4 py-3">姓名 / Name</th>
+                  <th className="px-4 py-3">主要角色 / Primary Role</th>
+                  <th className="px-4 py-3">级别 / Level</th>
+                  <th className="px-4 py-3">状态 / Status</th>
+                  <th className="px-4 py-3">项目数 / Projects</th>
+                  <th className="px-4 py-3">利用率 / Utilization</th>
+                  <th className="px-4 py-3">可用状态 / Availability</th>
+                  <th className="px-4 py-3">技能标签 / Skill Tags</th>
+                  <th className="px-4 py-3">敏感档案 / Sensitive</th>
+                  <th className="px-4 py-3">备注 / Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,7 +243,7 @@ export function PeopleResourcesWorkbench() {
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-3">{person.isSensitiveProfile ? <StatusBadge label="Masked profile" tone="warning" /> : <StatusBadge label="No" tone="muted" />}</td>
+                      <td className="px-4 py-3">{person.isSensitiveProfile ? <StatusBadge label="掩码档案 / Masked Profile" tone="warning" /> : <StatusBadge label="否 / No" tone="muted" />}</td>
                       <td className="px-4 py-3 text-slate-600">{person.notes}</td>
                     </tr>
                   );
@@ -253,7 +254,7 @@ export function PeopleResourcesWorkbench() {
         </article>
 
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Person detail</h2>
+          <h2 className="font-medium text-slate-900">单人详情 / Person Detail</h2>
           <div className="mt-4 space-y-4">
             <div className="rounded-md bg-slate-50 p-3">
               <div className="text-lg font-semibold text-slate-900">{selectedPerson?.displayName}</div>
@@ -424,7 +425,7 @@ export function PeopleResourcesWorkbench() {
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Resource pressure explanation</h2>
+          <h2 className="font-medium text-slate-900">资源压力解释 / Resource Pressure Explanation</h2>
           <div className="mt-4 space-y-3 text-sm text-slate-700">
             {resourcePressureSnapshots.map((snapshot) => (
               <div key={snapshot.projectId} className="rounded-md border border-slate-200 p-3">
@@ -440,7 +441,7 @@ export function PeopleResourcesWorkbench() {
         </article>
 
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Hiring gap explanation</h2>
+          <h2 className="font-medium text-slate-900">招聘缺口解释 / Hiring Gap Explanation</h2>
           <div className="mt-4 space-y-3 text-sm text-slate-700">
             {hiringGapSnapshots.slice(0, 5).map((snapshot, index) => (
               <div key={`${snapshot.projectId}-${snapshot.roleId}-${index}`} className="rounded-md border border-slate-200 p-3">
@@ -459,10 +460,10 @@ export function PeopleResourcesWorkbench() {
       <section className="rounded-lg border border-slate-200 bg-white">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
-            <h2 className="font-medium text-slate-900">Project allocation relations</h2>
-            <p className="text-sm text-slate-500">Person to project allocation records reserved for planning, cost and task distribution.</p>
+            <h2 className="font-medium text-slate-900">项目资源分配关系 / Project Allocation Relations</h2>
+            <p className="text-sm text-slate-500">记录人到项目的分配关系，供规划、成本和任务分配复用。</p>
           </div>
-          <StatusBadge label={`${projectAllocations.length} records`} tone="muted" />
+            <StatusBadge label={`${projectAllocations.length} 条记录 / records`} tone="muted" />
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -505,10 +506,10 @@ export function PeopleResourcesWorkbench() {
         <article className="rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <div>
-              <h2 className="font-medium text-slate-900">Hiring gap and resource pool</h2>
-              <p className="text-sm text-slate-500">Future staffing gaps are kept separate from on-board resources.</p>
+            <h2 className="font-medium text-slate-900">招聘缺口与资源池 / Hiring Gap & Resource Pool</h2>
+            <p className="text-sm text-slate-500">未来缺口与已在岗资源分开展示，便于后续规划和补位。</p>
             </div>
-            <StatusBadge label={`${hiringDemands.reduce((sum, demand) => sum + demand.headcount, 0)} heads`} tone="warning" />
+            <StatusBadge label={`${hiringDemands.reduce((sum, demand) => sum + demand.headcount, 0)} 人 / heads`} tone="warning" />
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -553,7 +554,7 @@ export function PeopleResourcesWorkbench() {
         </article>
 
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Sensitive cost placeholder</h2>
+          <h2 className="font-medium text-slate-900">敏感薪资占位区 / Sensitive Cost Placeholder</h2>
           <p className="mt-2 text-sm text-slate-600">
             This block intentionally shows masked mock data only. Real salary and cost data should be connected through a dedicated restricted service and permission layer.
           </p>
@@ -575,6 +576,16 @@ export function PeopleResourcesWorkbench() {
           </div>
         </article>
       </section>
+
+      <SourceContextPanel
+        title="来源说明 / Source Context"
+        sources={[
+          { name: '人员基础档案 / People Resource Records', detail: '提供人员基础信息、状态、可用性和项目归属。' },
+          { name: '资源分配计算层 / Resource Allocation Layer', detail: '提供 allocation utilization、resource pressure 和 hiring gap 解释。' },
+          { name: '任务执行聚合 / Task Execution Aggregates', detail: '单人详情中的任务执行摘要来自 person task load 聚合结果。' },
+          { name: '敏感信息占位 / Sensitive Profile Placeholder', detail: '当前仅展示掩码 mock 数据，后续应接入受限服务和权限层。' }
+        ]}
+      />
     </div>
   );
 }

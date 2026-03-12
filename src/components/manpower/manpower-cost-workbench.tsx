@@ -38,12 +38,12 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
 });
 
 const projectStatusOptions: Array<{ label: string; value: ManpowerProjectStatus | 'all' }> = [
-  { label: 'All status', value: 'all' },
-  { label: 'Planning', value: 'planning' },
-  { label: 'Active', value: 'active' },
-  { label: 'At risk', value: 'at-risk' },
-  { label: 'On hold', value: 'on-hold' },
-  { label: 'Completed', value: 'completed' }
+  { label: '全部状态 / All Status', value: 'all' },
+  { label: '规划中 / Planning', value: 'planning' },
+  { label: '进行中 / Active', value: 'active' },
+  { label: '有风险 / At Risk', value: 'at-risk' },
+  { label: '暂停中 / On Hold', value: 'on-hold' },
+  { label: '已完成 / Completed', value: 'completed' }
 ];
 
 function formatCurrency(value: number) {
@@ -183,23 +183,23 @@ export function ManpowerCostWorkbench() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-4 xl:grid-cols-7">
-        <InfoCard title="Total projects" value={totalProjects} hint="Included in current filter scope" />
-        <InfoCard title="Planned person-days" value={formatPersonDays(totalPlannedPersonDays)} />
-        <InfoCard title="Actual person-days" value={formatPersonDays(totalActualPersonDays)} />
-        <InfoCard title="Planned cost" value={formatCurrency(totalPlannedCost)} />
-        <InfoCard title="Actual cost" value={formatCurrency(totalActualCost)} />
+        <InfoCard title="项目总数 / Total Projects" value={totalProjects} hint="当前筛选范围 / Current filter scope" />
+        <InfoCard title="计划人天 / Planned Person-days" value={formatPersonDays(totalPlannedPersonDays)} />
+        <InfoCard title="实际人天 / Actual Person-days" value={formatPersonDays(totalActualPersonDays)} />
+        <InfoCard title="计划成本 / Planned Cost" value={formatCurrency(totalPlannedCost)} />
+        <InfoCard title="实际成本 / Actual Cost" value={formatCurrency(totalActualCost)} />
         <InfoCard
-          title="Cost variance"
+          title="成本偏差 / Cost Variance"
           value={formatCurrency(totalCostVariance)}
-          hint={totalCostVariance > 0 ? 'Above baseline plan' : 'Below baseline plan'}
+          hint={totalCostVariance > 0 ? '高于基线计划 / Above baseline' : '低于基线计划 / Below baseline'}
         />
-        <InfoCard title="High risk projects" value={highRiskProjects} hint="Project level high risk count" />
+        <InfoCard title="高风险项目 / High-risk Projects" value={highRiskProjects} hint="项目层高风险数量 / Project-level risk count" />
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
           <div className="min-w-[180px] flex-1">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Project filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
             <select
               value={selectedProjectId}
               onChange={(event) => setSelectedProjectId(event.target.value)}
@@ -213,7 +213,7 @@ export function ManpowerCostWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Status filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">状态筛选 / Status Filter</label>
             <select
               value={selectedStatus}
               onChange={(event) => setSelectedStatus(event.target.value as ManpowerProjectStatus | 'all')}
@@ -227,13 +227,13 @@ export function ManpowerCostWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Version filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">版本筛选 / Version Filter</label>
             <select
               value={selectedVersionId}
               onChange={(event) => setSelectedVersionId(event.target.value)}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="all">All active versions</option>
+              <option value="all">全部激活版本 / All Active Versions</option>
               {manpowerPlanVersions
                 .filter((version) => !version.isBaseline)
                 .map((version) => (
@@ -244,17 +244,17 @@ export function ManpowerCostWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Time range</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">时间范围 / Time Range</label>
             <div className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-500">2026 Q1 - Q2</div>
           </div>
           <div className="min-w-[180px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Role filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">角色筛选 / Role Filter</label>
             <select
               value={selectedRoleId}
               onChange={(event) => setSelectedRoleId(event.target.value)}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="all">All roles</option>
+              <option value="all">全部角色 / All Roles</option>
               {manpowerRoleConfigs.map((role) => (
                 <option key={role.id} value={role.id}>
                   {role.name} / {role.level}
@@ -263,7 +263,7 @@ export function ManpowerCostWorkbench() {
             </select>
           </div>
           <div className="min-w-[240px] flex-1">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Display mode</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">展示模式 / View Mode</label>
             <div className="flex flex-wrap gap-2">
               {manpowerViewModes.map((mode) => (
                 <button
@@ -283,31 +283,31 @@ export function ManpowerCostWorkbench() {
           </div>
         </div>
         <div className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Current mode: <span className="font-medium text-slate-900">{displayMode}</span>. This v0 keeps the structure explicit for later real-data wiring.
+          当前模式 / Current Mode: <span className="font-medium text-slate-900">{displayMode}</span>。当前保持 v0 结构化 mock，便于后续接真实数据。
         </div>
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
-            <h2 className="font-medium text-slate-900">Multi-project summary</h2>
-            <p className="text-sm text-slate-500">Project, current version, baseline, plan, actual and variance at one level.</p>
+            <h2 className="font-medium text-slate-900">多项目投入汇总 / Multi-project Summary</h2>
+            <p className="text-sm text-slate-500">统一查看项目、当前版本、基线、计划、实际与偏差。</p>
           </div>
-          <StatusBadge label={`${filteredProjects.length} projects`} tone="muted" />
+          <StatusBadge label={`${filteredProjects.length} 个项目 / projects`} tone="muted" />
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">
               <tr>
-                <th className="px-4 py-3">Project</th>
-                <th className="px-4 py-3">Current version</th>
-                <th className="px-4 py-3">Baseline</th>
-                <th className="px-4 py-3">Planned PD</th>
-                <th className="px-4 py-3">Actual PD</th>
-                <th className="px-4 py-3">Planned cost</th>
-                <th className="px-4 py-3">Actual cost</th>
-                <th className="px-4 py-3">Variance</th>
-                <th className="px-4 py-3">Risk</th>
+                <th className="px-4 py-3">项目 / Project</th>
+                <th className="px-4 py-3">当前版本 / Current Version</th>
+                <th className="px-4 py-3">基线版本 / Baseline</th>
+                <th className="px-4 py-3">计划人天 / Planned PD</th>
+                <th className="px-4 py-3">实际人天 / Actual PD</th>
+                <th className="px-4 py-3">计划成本 / Planned Cost</th>
+                <th className="px-4 py-3">实际成本 / Actual Cost</th>
+                <th className="px-4 py-3">偏差 / Variance</th>
+                <th className="px-4 py-3">风险 / Risk</th>
               </tr>
             </thead>
             <tbody>
@@ -668,15 +668,15 @@ export function ManpowerCostWorkbench() {
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <RuleContextPanel
-          title="Calculation rules / 计算口径"
+          title="计算口径 / Calculation Rules"
           rules={[
-            { name: 'Task write-back to actual input', detail: '任务回写实际工天通过 actual input adapter 进入人力成本层，并与已有 actual input 取较大值形成保守口径。' },
-            { name: 'Allocation participation', detail: 'allocation write-back preview 作为第二来源参与 actual cost 估算，但当前不直接覆盖原始 mock 数据。' },
-            { name: 'Role rate conversion', detail: '默认使用角色日单价做工天成本估算，月成本字段仅作为后续更精细换算的保留位。' },
-            { name: 'Comparison output', detail: '统一输出项目层与阶段层 planned vs actual vs variance snapshot，供后续页面和导入链复用。' }
+            { name: '任务回写到实际输入 / Task Write-back to Actual Input', detail: '任务回写实际工天通过 actual input adapter 进入人力成本层，并与已有 actual input 取较大值形成保守口径。' },
+            { name: '分配参与口径 / Allocation Participation', detail: 'allocation write-back preview 作为第二来源参与 actual cost 估算，但当前不直接覆盖原始 mock 数据。' },
+            { name: '角色费率换算 / Role Rate Conversion', detail: '默认使用角色日单价做工天成本估算，月成本字段仅作为后续更精细换算的保留位。' },
+            { name: '比较结果输出 / Comparison Output', detail: '统一输出项目层与阶段层 planned vs actual vs variance snapshot，供后续页面和导入链复用。' }
           ]}
         />
-        <SnapshotContextPanel title="Snapshot context / 快照口径" context={costSummary.snapshotContext} />
+        <SnapshotContextPanel title="快照口径 / Snapshot Context" context={costSummary.snapshotContext} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-3">

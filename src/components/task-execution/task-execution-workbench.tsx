@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { InfoCard } from '@/components/ui/info-card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { RuleContextPanel } from '@/components/shared/rule-context-panel';
+import { SourceContextPanel } from '@/components/shared/source-context-panel';
 import { manpowerProjects } from '@/data/manpower/manpower-projects';
 import { manpowerStagePlans } from '@/data/manpower/manpower-stage-plans';
 import { peopleResources } from '@/data/resources/people-resources';
@@ -32,7 +34,7 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
 });
 
 const priorityOptions: Array<{ label: string; value: TaskPriority | 'all' }> = [
-  { label: 'All priority', value: 'all' },
+  { label: '全部优先级 / All Priority', value: 'all' },
   { label: 'P0', value: 'p0' },
   { label: 'P1', value: 'p1' },
   { label: 'P2', value: 'p2' },
@@ -135,21 +137,21 @@ export function TaskExecutionWorkbench() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-4 xl:grid-cols-7">
-        <InfoCard title="Total tasks" value={totalTasks} />
-        <InfoCard title="In progress" value={inProgressTasks} />
-        <InfoCard title="Blocked" value={blockedTasks} />
-        <InfoCard title="High risk" value={highRiskTasks} />
-        <InfoCard title="Done" value={doneTasks} />
-        <InfoCard title="Overdue" value={overdueTasks} />
-        <InfoCard title="Cross-project owners" value={crossProjectOwners} />
+        <InfoCard title="任务总数 / Total Tasks" value={totalTasks} />
+        <InfoCard title="进行中 / In Progress" value={inProgressTasks} />
+        <InfoCard title="阻塞任务 / Blocked" value={blockedTasks} />
+        <InfoCard title="高风险任务 / High Risk" value={highRiskTasks} />
+        <InfoCard title="已完成 / Done" value={doneTasks} />
+        <InfoCard title="逾期任务 / Overdue" value={overdueTasks} />
+        <InfoCard title="跨项目负责人 / Cross-project Owners" value={crossProjectOwners} />
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Project filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
             <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">All projects</option>
+              <option value="all">全部项目 / All Projects</option>
               {manpowerProjects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -158,9 +160,9 @@ export function TaskExecutionWorkbench() {
             </select>
           </div>
           <div className="min-w-[180px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Stage filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">阶段筛选 / Stage Filter</label>
             <select value={selectedStageId} onChange={(event) => setSelectedStageId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">All stages</option>
+              <option value="all">全部阶段 / All Stages</option>
               {manpowerStagePlans.map((stage) => (
                 <option key={stage.id} value={stage.id}>
                   {stage.stageName} / {manpowerProjects.find((project) => project.id === stage.projectId)?.code}
@@ -169,7 +171,7 @@ export function TaskExecutionWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Status filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">状态筛选 / Status Filter</label>
             <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as TaskStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
               {sharedTaskStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -179,7 +181,7 @@ export function TaskExecutionWorkbench() {
             </select>
           </div>
           <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Priority filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">优先级筛选 / Priority Filter</label>
             <select value={selectedPriority} onChange={(event) => setSelectedPriority(event.target.value as TaskPriority | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
               {priorityOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -189,9 +191,9 @@ export function TaskExecutionWorkbench() {
             </select>
           </div>
           <div className="min-w-[180px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Owner filter</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">负责人筛选 / Owner Filter</label>
             <select value={selectedOwnerId} onChange={(event) => setSelectedOwnerId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">All owners</option>
+              <option value="all">全部负责人 / All Owners</option>
               {peopleResources.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.displayName}
@@ -200,7 +202,7 @@ export function TaskExecutionWorkbench() {
             </select>
           </div>
           <div className="min-w-[260px] flex-1">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Display mode</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">展示模式 / View Mode</label>
             <div className="flex flex-wrap gap-2">
               {commonViewModes.task.map((mode) => (
                 <button key={mode} type="button" onClick={() => setViewMode(mode)} className={`rounded-md border px-3 py-2 text-sm ${viewMode === mode ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>
@@ -211,7 +213,7 @@ export function TaskExecutionWorkbench() {
           </div>
         </div>
         <div className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Current mode: <span className="font-medium text-slate-900">{viewMode}</span>. Presets reserved for future task boards: {taskViewPresets.map((preset) => preset.name).join(' / ')}.
+          当前模式 / Current Mode: <span className="font-medium text-slate-900">{viewMode}</span>。预留视图 / Reserved Presets: {taskViewPresets.map((preset) => preset.name).join(' / ')}.
         </div>
       </section>
 
@@ -219,29 +221,29 @@ export function TaskExecutionWorkbench() {
         <article className="rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <div>
-              <h2 className="font-medium text-slate-900">Task table</h2>
-              <p className="text-sm text-slate-500">Execution chain from project to stage, owner, collaboration, progress and risk.</p>
+              <h2 className="font-medium text-slate-900">任务总表 / Task Table</h2>
+              <p className="text-sm text-slate-500">按项目、阶段、负责人、协作人、进度和风险查看执行主链路。</p>
             </div>
-            <StatusBadge label={`${filteredTasks.length} tasks`} tone="muted" />
+            <StatusBadge label={`${filteredTasks.length} 条任务 / tasks`} tone="muted" />
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Task</th>
-                  <th className="px-4 py-3">Project</th>
-                  <th className="px-4 py-3">Stage</th>
-                  <th className="px-4 py-3">Level</th>
-                  <th className="px-4 py-3">Owner</th>
-                  <th className="px-4 py-3">Collaborators</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Priority</th>
-                  <th className="px-4 py-3">Progress</th>
-                  <th className="px-4 py-3">Planned window</th>
-                  <th className="px-4 py-3">Actual days</th>
-                  <th className="px-4 py-3">Risk</th>
-                  <th className="px-4 py-3">Blocker</th>
+                  <th className="px-4 py-3">任务编号 / Code</th>
+                  <th className="px-4 py-3">任务名称 / Task</th>
+                  <th className="px-4 py-3">所属项目 / Project</th>
+                  <th className="px-4 py-3">所属阶段 / Stage</th>
+                  <th className="px-4 py-3">任务层级 / Level</th>
+                  <th className="px-4 py-3">负责人 / Owner</th>
+                  <th className="px-4 py-3">协作人数 / Collaborators</th>
+                  <th className="px-4 py-3">状态 / Status</th>
+                  <th className="px-4 py-3">优先级 / Priority</th>
+                  <th className="px-4 py-3">进度 / Progress</th>
+                  <th className="px-4 py-3">计划周期 / Planned Window</th>
+                  <th className="px-4 py-3">实际工天 / Actual Days</th>
+                  <th className="px-4 py-3">风险 / Risk</th>
+                  <th className="px-4 py-3">阻塞摘要 / Blocker</th>
                 </tr>
               </thead>
               <tbody>
@@ -278,7 +280,7 @@ export function TaskExecutionWorkbench() {
         </article>
 
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Task detail</h2>
+          <h2 className="font-medium text-slate-900">单任务详情 / Task Detail</h2>
           <div className="mt-4 space-y-4">
             <div className="rounded-md bg-slate-50 p-3">
               <div className="text-lg font-semibold text-slate-900">{selectedTask?.title}</div>
@@ -391,8 +393,8 @@ export function TaskExecutionWorkbench() {
 
         <article className="rounded-lg border border-slate-200 bg-white">
           <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="font-medium text-slate-900">People task load</h2>
-            <p className="text-sm text-slate-500">Read-only load summary using people and resource records.</p>
+            <h2 className="font-medium text-slate-900">人员任务负载 / People Task Load</h2>
+            <p className="text-sm text-slate-500">引用人员与资源数据，按任务执行口径只读汇总负载。</p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -431,7 +433,7 @@ export function TaskExecutionWorkbench() {
 
       <section className="grid gap-6 xl:grid-cols-3">
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Dependency chain summary</h2>
+          <h2 className="font-medium text-slate-900">依赖链摘要 / Dependency Summary</h2>
           <div className="mt-4 space-y-3">
             {taskDependencies.map((dependency) => {
               const from = taskExecutionRecords.find((task) => task.id === dependency.fromTaskId);
@@ -448,7 +450,7 @@ export function TaskExecutionWorkbench() {
         </article>
 
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Current blockers and high-risk dependencies</h2>
+          <h2 className="font-medium text-slate-900">阻塞与高风险依赖 / Blockers & High-risk Dependencies</h2>
           <div className="mt-4 space-y-3">
             {blockerTasks.map((task) => (
               <div key={task.id} className="rounded-md border border-rose-200 bg-rose-50 p-3">
@@ -469,7 +471,7 @@ export function TaskExecutionWorkbench() {
         </article>
 
         <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Priority actions</h2>
+          <h2 className="font-medium text-slate-900">优先处理项 / Priority Actions</h2>
           <div className="mt-4 space-y-3">
             {priorityActionTasks.map((task) => (
               <div key={task.id} className="rounded-md border border-slate-200 p-3">
@@ -489,10 +491,10 @@ export function TaskExecutionWorkbench() {
         <article className="rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <div>
-              <h2 className="font-medium text-slate-900">Execution write-back summary</h2>
-              <p className="text-sm text-slate-500">Aggregated from task records, activity logs and project allocations for downstream cost write-back.</p>
+              <h2 className="font-medium text-slate-900">执行回写概览 / Execution Write-back Summary</h2>
+              <p className="text-sm text-slate-500">由任务主记录、执行记录和项目分配聚合生成，供后续成本回写使用。</p>
             </div>
-            <StatusBadge label={`${readyWritebackCount}/${writebackRecords.length} ready`} tone="warning" />
+            <StatusBadge label={`${readyWritebackCount}/${writebackRecords.length} 已就绪 / ready`} tone="warning" />
           </div>
           <div className="grid gap-4 border-b border-slate-200 px-4 py-4 md:grid-cols-4">
             <InfoCard title="Planned work days" value={totalPlannedWorkDays} />
@@ -577,35 +579,23 @@ export function TaskExecutionWorkbench() {
           </div>
         </article>
 
-        <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Aggregation rules</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-700">
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Actual work day rule</div>
-              <p className="mt-1">Task master `actualWorkDays` is kept, activity logs are summed as `activitySpentWorkDays`, and `normalizedActualWorkDays` uses the larger of the two values.</p>
-            </div>
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Weighted progress rule</div>
-              <p className="mt-1">Stage progress uses `ProjectStageTaskLink.weight`; if a stage has zero total weight, it falls back to average task progress. Output stays in 0-1.</p>
-            </div>
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Overdue and blocker rule</div>
-              <p className="mt-1">Overdue means not done and planned end earlier than {MOCK_TODAY}. Blocker means blocked status, non-empty blocker summary, or blocker activity flag.</p>
-            </div>
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Current scope</div>
-              <p className="mt-1">These are v0 mock rules and can be replaced later by real worklog, execution record and cost service inputs without changing page structure.</p>
-            </div>
-          </div>
-        </article>
+        <RuleContextPanel
+          title="聚合口径说明 / Aggregation Rules"
+          rules={[
+            { name: '实际工天口径 / Actual Work Day Rule', detail: '任务主记录 `actualWorkDays` 保留，activity spent work days 单独汇总，`normalizedActualWorkDays` 取二者较大值。' },
+            { name: '加权进度口径 / Weighted Progress Rule', detail: '阶段进度优先使用 `ProjectStageTaskLink.weight`；若某阶段总权重为 0，则退化为任务 progress 平均值。' },
+            { name: '逾期与阻塞口径 / Overdue & Blocker Rule', detail: `逾期表示未完成且计划结束时间早于 ${MOCK_TODAY}；阻塞由 blocked 状态、非空 blocker summary 或 blocker activity 任一触发。` },
+            { name: '当前范围 / Current Scope', detail: '当前仍为 v0 mock 规则，后续可替换为真实工时、执行记录和成本服务输入。' }
+          ]}
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <article className="rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <div>
-              <h2 className="font-medium text-slate-900">Execution record placeholder</h2>
-              <p className="text-sm text-slate-500">Sample activity records reserved for later progress write-back and worklog input.</p>
+              <h2 className="font-medium text-slate-900">执行记录占位区 / Execution Record Placeholder</h2>
+              <p className="text-sm text-slate-500">示例执行记录已预留，后续可接真实进度回写与工时录入。</p>
             </div>
             <StatusBadge label={`${taskActivityRecords.length} records`} tone="muted" />
           </div>
@@ -643,27 +633,15 @@ export function TaskExecutionWorkbench() {
           </div>
         </article>
 
-        <article className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="font-medium text-slate-900">Write-back extension notes</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-700">
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Task progress to project progress</div>
-              <p className="mt-1">Use `ProjectStageTaskLink.weight` to aggregate task progress into stage and project execution percent.</p>
-            </div>
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Task worklog to manpower and allocations</div>
-              <p className="mt-1">Map `TaskActivityRecord.spentWorkDays` and `relatedAllocationIds` into allocation consumption and person load snapshots.</p>
-            </div>
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Task execution to cost analysis</div>
-              <p className="mt-1">Combine actual work days with allocation and role rates, then emit data into the manpower cost comparison layer.</p>
-            </div>
-            <div className="rounded-md bg-slate-50 p-3">
-              <div className="font-medium text-slate-900">Version and execution expansion</div>
-              <p className="mt-1">Future version linkage can attach task snapshots to specific plan versions without changing the current task UI structure.</p>
-            </div>
-          </div>
-        </article>
+        <SourceContextPanel
+          title="来源与扩展说明 / Source & Write-back Context"
+          sources={[
+            { name: '任务进度到项目进度 / Task Progress to Project Progress', detail: '通过 `ProjectStageTaskLink.weight` 把任务进度汇总到阶段和项目执行百分比。' },
+            { name: '任务工时到分配与人力 / Worklog to Allocation & Manpower', detail: '将 `TaskActivityRecord.spentWorkDays` 与 `relatedAllocationIds` 映射到 allocation consumption 和人员负载。' },
+            { name: '任务执行到成本分析 / Task Execution to Cost Analysis', detail: '结合实际工天、allocation 和角色费率，为 manpower comparison layer 输出中间结果。' },
+            { name: '版本与执行扩展 / Version Expansion', detail: '后续版本关联可将任务快照绑定到具体计划版本，而无需重做当前任务中心 UI。' }
+          ]}
+        />
       </section>
     </div>
   );
