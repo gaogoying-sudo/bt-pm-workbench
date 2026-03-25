@@ -8,9 +8,15 @@ import { TaskActivityRecord } from '@/lib/types/task-execution';
 import { ActualInputRecord } from '@/lib/types/manpower';
 import { QualityCheckRecord } from '@/lib/types/quality';
 import { addProjectRiskEvent } from '@/lib/input-events/event-projection-store';
+import { reviewRepository } from '@/server/repositories/review-repository';
+import { DecisionLogRecord } from '@/lib/types/reviews';
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function dayIso() {
+  return nowIso().slice(0, 10);
 }
 
 function makeWriteback(event: ConfirmedEventRecord): EventWritebackRecord {
@@ -144,6 +150,46 @@ export const eventWritebackService = {
         });
         affected.push({ targetType: 'risk-record', targetId: projectionId, canonicalProjectId: payload.projectId });
         trace.push('Recorded risk event into projection store');
+      }
+
+      // Scenario-grade rule: decision-note / stage-update create decision log + followups (optional)
+      if (event.payload.eventType === 'decision-note' || event.payload.eventType === 'stage-update') {
+        const payload: any = event.payload;
+        const decisionId = `dec-${nowIso().replace(/[:.]/g, '-')}`;
+        const targets: any[] = [];
+        if (payload.projectId) targets.push({ targetType: 'project', targetId: payload.projectId });
+        if (payload.linkedVersionId) targets.push({ targetType: 'version', targetId: payload.linkedVersionId });
+
+        const decision: DecisionLogRecord = {
+          id: decisionId,
+          title: payload.title,
+          decision:
+            payload.decisionType === 'release-review'
+              ? `releaseDecision=${payload.releaseDecision ?? 'unknown'}`
+              : payload.content,
+          reason: payload.content,
+          scope: { targets },
+          decidedAt: nowIso(),
+          decidedByPersonId: event.confirmedBy.personId,
+          status: 'effective',
+          followups: (payload.followups ?? []).map((f: any, idx: number) => ({
+            id: `${decisionId}-fu-${idx + 1}`,
+            title: f.title,
+            ownerPersonId: f.ownerPersonId ?? event.confirmedBy.personId,
+            dueDate: f.dueDate ?? dayIso(),
+            status: f.status ?? 'open',
+            notes: f.notes ?? ''
+          })),
+          relatedReviewId: undefined
+        };
+
+        if (targets.length > 0) {
+          reviewRepository.upsertDecision(decision);
+          trace.push('Created DecisionLogRecord from decision-note/stage-update');
+          targets.forEach((t) => affected.push({ targetType: t.targetType, targetId: t.targetId }));
+        } else {
+          trace.push('Skipped DecisionLogRecord: no projectId/versionId targets');
+        }
       }
 
       wb.status = 'applied';

@@ -12,6 +12,10 @@ import { buildProjectStageProgressSnapshots } from '@/lib/project-progress/proje
 import { resolveProjectId, getProjectIdentity } from '@/lib/identity/unified-project-registry';
 import { qualityService } from '@/server/services/quality-service';
 import { inputEventRepository } from '@/server/repositories/input-event-repository';
+import { buildProjectExternalReadinessSummaries } from '@/lib/integrations/readiness-builders';
+import { dataExchangeRepository } from '@/server/repositories/data-exchange-repository';
+import { reviewService } from '@/server/services/review-service';
+import { AlertPanel } from '@/components/alerting/alert-panel';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -41,6 +45,13 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
   const projectDocs = documentRecords.filter((item) => item.projectId === params.projectId).slice(0, 4);
   const stageSnapshots = identity?.hasManpowerData ? buildProjectStageProgressSnapshots(canonicalId) : [];
   const qualitySnapshot = qualityService.getProjectQualitySnapshot(params.projectId);
+  const readiness =
+    buildProjectExternalReadinessSummaries().find((r) => r.projectId === canonicalId) ?? null;
+  const externalBinding =
+    dataExchangeRepository
+      .listBindings()
+      .find((b) => b.internalType === 'project' && b.internalId === canonicalId && b.status === 'active') ?? null;
+  const reviewPack = reviewService.listPack({ projectId: canonicalId });
 
   return (
     <PageContainer>
@@ -174,6 +185,68 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
           </ul>
         )}
       </section>
+
+      <section className="mt-4 grid gap-4 lg:grid-cols-2">
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 font-medium text-slate-900">外部就绪摘要 / External Readiness</h3>
+          <p className="text-sm text-slate-700">Readiness: {readiness?.readinessLevel ?? '-'}</p>
+          <p className="mt-1 text-sm text-slate-700">Export ready: {readiness?.exportReady ? 'Yes' : 'No'}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            外部 readiness 用于外部系统消费/触发（备料/交付/报表），不等同于内部进度。
+          </p>
+          {readiness?.reasons?.length ? (
+            <ul className="mt-2 list-disc pl-5 text-xs text-slate-600">
+              {readiness.reasons.slice(0, 6).map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          ) : null}
+        </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 font-medium text-slate-900">外部映射 / External Mapping</h3>
+          <p className="text-sm text-slate-700">External project id: {externalBinding?.externalIdentifier ?? '-'}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            该映射由 import apply 或手工维护写入。缺失映射会导致 supply readiness 降级。
+          </p>
+        </article>
+      </section>
+
+      <section className="mt-4 grid gap-4 lg:grid-cols-3">
+        <article className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">
+          <h3 className="mb-2 font-medium text-slate-900">复盘与决策 / Reviews & Decisions</h3>
+          <div className="text-sm text-slate-700">
+            <div className="rounded-md bg-slate-50 p-3">
+              <div className="font-medium text-slate-900">Recent decisions</div>
+              <ul className="mt-2 list-disc pl-5">
+                {reviewPack.decisions.slice(0, 3).map((d) => (
+                  <li key={d.id}>
+                    <span className="font-medium">{d.title}</span> — <span className="text-xs text-slate-500">{d.decidedAt}</span>
+                  </li>
+                ))}
+              </ul>
+              {reviewPack.decisions.length === 0 ? <p className="mt-2 text-sm text-slate-500">暂无决策记录。</p> : null}
+            </div>
+            <div className="mt-3 rounded-md bg-slate-50 p-3">
+              <div className="font-medium text-slate-900">Lessons learned</div>
+              <ul className="mt-2 list-disc pl-5">
+                {reviewPack.lessons.slice(0, 3).map((l) => (
+                  <li key={l.id}>{l.title}</li>
+                ))}
+              </ul>
+              {reviewPack.lessons.length === 0 ? <p className="mt-2 text-sm text-slate-500">暂无经验沉淀。</p> : null}
+            </div>
+          </div>
+        </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 font-medium text-slate-900">指标口径 / Metric Contract</h3>
+          <p className="text-sm text-slate-700">本项目关键指标口径已进入 `/api/metrics` 统一治理。</p>
+          <p className="mt-1 text-xs text-slate-500">页面不再自行定义 health/readiness/status 规则，避免历史口径漂移。</p>
+        </article>
+      </section>
+
+      <div className="mt-4">
+        <AlertPanel scope="project" scopeId={canonicalId} title="项目主动预警与建议 / Project Alerts & Recommendations" />
+      </div>
 
       <section className="mt-4 grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <SourceContextPanel
