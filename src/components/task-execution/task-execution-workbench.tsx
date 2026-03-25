@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { InfoCard } from '@/components/ui/info-card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { RuleContextPanel } from '@/components/shared/rule-context-panel';
@@ -62,6 +63,7 @@ export function TaskExecutionWorkbench() {
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority | 'all'>('all');
   const [selectedOwnerId, setSelectedOwnerId] = useState<string | 'all'>('all');
   const [viewMode, setViewMode] = useState<(typeof commonViewModes.task)[number]>(commonViewModes.task[0]);
+  const [recentConfirmedEvents, setRecentConfirmedEvents] = useState<any[]>([]);
 
   const filteredTasks = taskExecutionRecords.filter((task) => {
     if (selectedProjectId !== 'all' && task.projectId !== selectedProjectId) return false;
@@ -77,6 +79,13 @@ export function TaskExecutionWorkbench() {
       setSelectedTaskId(filteredTasks[0]?.id ?? taskExecutionRecords[0]?.id ?? '');
     }
   }, [filteredTasks, selectedTaskId]);
+
+  useEffect(() => {
+    fetch('/api/input-events/confirm')
+      .then((r) => r.json())
+      .then((json) => setRecentConfirmedEvents(json?.data?.confirmed ?? []))
+      .catch(() => setRecentConfirmedEvents([]));
+  }, []);
 
   const selectedTask = filteredTasks.find((task) => task.id === selectedTaskId) ?? filteredTasks[0] ?? taskExecutionRecords[0];
   const selectedTaskChildren = taskExecutionRecords.filter((task) => task.parentTaskId === selectedTask?.id);
@@ -588,6 +597,27 @@ export function TaskExecutionWorkbench() {
             { name: '当前范围 / Current Scope', detail: '当前仍为 v0 mock 规则，后续可替换为真实工时、执行记录和成本服务输入。' }
           ]}
         />
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-medium text-slate-900">最近确认事件 / Recent Confirmed Events</h2>
+          <Link href="/input-inbox" className="text-sm text-blue-700">
+            去输入收件箱 / Go to Input Inbox
+          </Link>
+        </div>
+        <div className="mt-3 space-y-2">
+          {recentConfirmedEvents.slice(0, 6).map((evt) => (
+            <div key={evt.id} className="rounded-md border border-slate-200 p-2 text-sm text-slate-700">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">{evt.eventType}</span>
+                <StatusBadge label={evt.status} tone="muted" />
+              </div>
+              <div className="mt-1 text-xs text-slate-500">{evt.confirmedAt}</div>
+            </div>
+          ))}
+          {recentConfirmedEvents.length === 0 ? <p className="text-sm text-slate-500">暂无事件。</p> : null}
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">

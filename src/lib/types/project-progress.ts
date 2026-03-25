@@ -13,7 +13,8 @@ export type ProjectSignalType =
   | 'high-risk-task'
   | 'resource-pressure'
   | 'writeback-gap'
-  | 'stage-delay';
+  | 'stage-delay'
+  | 'input-risk-event';
 export type ProjectSignalSeverity = 'low' | 'medium' | 'high';
 export type ProjectSignalStatus = 'open' | 'watching' | 'mitigated';
 export type ProjectVersionRelationType =
