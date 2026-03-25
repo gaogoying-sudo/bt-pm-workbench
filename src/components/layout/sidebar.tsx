@@ -27,6 +27,7 @@ const navGroups: NavGroup[] = [
   {
     label: '索引与治理 / Index & Governance',
     items: [
+      ['最终验收 / Closeout', '/closeout'],
       ['输入收件箱 / Input Inbox', '/input-inbox'],
       ['导入导出 / Data Exchange', '/data-exchange'],
       ['任务索引 / Tasks (Legacy)', '/tasks'],
