@@ -3,6 +3,7 @@ import { buildProjectProgressSnapshots } from '@/lib/project-progress/project-pr
 import { buildProjectRiskSignals } from '@/lib/project-progress/project-risk-builders';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
+import { SnapshotContext } from '@/lib/types/snapshot';
 import {
   ReleaseReadinessRecord,
   VersionGovernanceRecord,
@@ -34,7 +35,7 @@ export function buildVersionProjectLinkSnapshots(): VersionProjectLinkRecord[] {
   });
 }
 
-export function buildVersionGovernanceRecords(): {
+export function buildVersionGovernanceRecords(input?: { snapshotContext?: Partial<SnapshotContext> }): {
   records: VersionGovernanceRecord[];
   linkRecords: VersionProjectLinkRecord[];
   readinessRecords: ReleaseReadinessRecord[];
@@ -94,6 +95,9 @@ export function buildVersionGovernanceRecords(): {
         relatedSnapshots[0]?.latestSummary ??
         '版本治理记录由项目进度、风险与回写结果映射生成 / Governance record is built from project progress, risks and write-back results.',
       snapshotContext: buildSnapshotContext({
+        snapshotDate: input?.snapshotContext?.snapshotDate,
+        baselineDate: input?.snapshotContext?.baselineDate,
+        compareDate: input?.snapshotContext?.compareDate,
         notes: '版本治理快照由项目进度中心和任务执行聚合层共同支撑 / Version governance snapshot is backed by project progress and task execution aggregation.'
       }),
       notes: '当前为 v0 mock 版本治理对象，后续可替换为真实发布流程与版本状态服务 / v0 governance object reserved for future release workflow services.'

@@ -6,3 +6,11 @@ export function mapRiskTone(level?: string) {
   }
   return 'muted' as const;
 }
+
+export function mapQualityTone(status?: string, severity?: string) {
+  if (status === 'failed') return 'danger' as const;
+  if (severity === 'critical' || severity === 'major') return 'warning' as const;
+  if (status === 'passed') return 'success' as const;
+  if (status === 'in-review' || status === 'pending') return 'muted' as const;
+  return 'muted' as const;
+}

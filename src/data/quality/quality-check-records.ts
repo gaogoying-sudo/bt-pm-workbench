@@ -1,4 +1,9 @@
-import { QualityCheckRecord, QualityGateDefinition } from '@/lib/types/quality';
+import {
+  DeliverableQualityRecord,
+  QualityCheckRecord,
+  QualityGateDefinition,
+  QualityIssueRecord
+} from '@/lib/types/quality';
 
 export const qualityCheckRecords: QualityCheckRecord[] = [
   {
@@ -98,5 +103,61 @@ export const qualityGateDefinitions: QualityGateDefinition[] = [
     passThreshold: 0.9,
     isBlocking: true,
     notes: '联调阶段必须满足测试覆盖和验收标准。'
+  }
+];
+
+export const deliverableQualityRecords: DeliverableQualityRecord[] = [
+  {
+    id: 'dq-001',
+    projectId: 'project-pm-workbench',
+    stageId: 'stage-pmw-3',
+    linkedVersionId: 'version-pmw-0.1',
+    deliverableType: 'tech-design',
+    title: '聚合链路与 API 合约 Tech Design',
+    ownerId: 'person-chen',
+    reviewStatus: 'passed',
+    severity: 'major',
+    reviewedAt: '2026-03-12',
+    notes: '覆盖 unified project、write-back chain、API response shape。'
+  },
+  {
+    id: 'dq-002',
+    projectId: 'project-ops-console',
+    stageId: 'stage-ops-2',
+    linkedVersionId: 'version-ops-0.3',
+    deliverableType: 'prd',
+    title: '告警聚合 PRD 评审',
+    ownerId: 'person-li',
+    reviewStatus: 'in-review',
+    severity: 'major',
+    reviewedAt: null,
+    notes: '部分边界条件仍待补充。'
+  }
+];
+
+export const qualityIssueRecords: QualityIssueRecord[] = [
+  {
+    id: 'qi-001',
+    projectId: 'project-pm-workbench',
+    stageId: 'stage-pmw-4',
+    linkedVersionId: 'version-pmw-0.1',
+    title: '缺少 e2e 跑通路径与最小回归集',
+    status: 'open',
+    severity: 'minor',
+    createdAt: '2026-03-12',
+    closedAt: null,
+    notes: 'Phase 2 收口后补最小回归用例。'
+  },
+  {
+    id: 'qi-002',
+    projectId: 'project-ops-console',
+    stageId: 'stage-ops-2',
+    linkedVersionId: 'version-ops-0.3',
+    title: '部分 release readiness 口径未统一',
+    status: 'mitigating',
+    severity: 'major',
+    createdAt: '2026-03-08',
+    closedAt: null,
+    notes: '已在 version-governance builder 中补充统一字段，待评审关闭。'
   }
 ];
