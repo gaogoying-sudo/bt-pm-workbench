@@ -1,6 +1,6 @@
 import { SnapshotContext } from '@/lib/types/snapshot';
 
-export const DEFAULT_SNAPSHOT_DATE = '2026-03-12';
+export const DEFAULT_SNAPSHOT_DATE = new Date().toISOString().slice(0, 10);
 export const DEFAULT_BASELINE_DATE = '2026-02-01';
 export const DEFAULT_COMPARE_DATE = '2026-03-01';
 
@@ -15,7 +15,9 @@ export function buildSnapshotContext(input?: Partial<SnapshotContext>): Snapshot
     compareDate,
     comparisonBasis:
       input?.comparisonBasis ??
-      '当前采用 v0 mock 聚合口径，以固定快照日、基线日和对比日作为治理视图输入 / Current view uses v0 mock aggregation with fixed snapshot, baseline and compare dates.',
+      (compareDate
+        ? `对比 ${snapshotDate} 与 ${compareDate} / Comparing ${snapshotDate} against ${compareDate}`
+        : `快照 ${snapshotDate}，基线 ${baselineDate} / Snapshot ${snapshotDate}, baseline ${baselineDate}`),
     timelineLabel:
       input?.timelineLabel ??
       `快照 ${snapshotDate} / Snapshot ${snapshotDate}`,
@@ -25,4 +27,18 @@ export function buildSnapshotContext(input?: Partial<SnapshotContext>): Snapshot
 
 export function buildSnapshotLabel(context: SnapshotContext) {
   return `${context.timelineLabel} | 基线 ${context.baselineDate ?? '-'} / Baseline ${context.baselineDate ?? '-'}`;
+}
+
+export function buildMultiPointSnapshotContext(
+  snapshotDate: string,
+  baselineDate: string,
+  compareDate: string
+): SnapshotContext {
+  return buildSnapshotContext({
+    snapshotDate,
+    baselineDate,
+    compareDate,
+    comparisonBasis: `多时点对比: 快照 ${snapshotDate} vs 对比 ${compareDate}，基线 ${baselineDate}`,
+    notes: 'Multi-point comparison context for timeline analysis.'
+  });
 }

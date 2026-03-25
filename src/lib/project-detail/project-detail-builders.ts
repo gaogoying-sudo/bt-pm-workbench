@@ -1,5 +1,3 @@
-import { projects } from '@/data/projects';
-import { manpowerProjects } from '@/data/manpower/manpower-projects';
 import { buildProjectCostComparisonSnapshots } from '@/lib/manpower/comparison-builders';
 import { buildProjectProgressSnapshots, buildProjectStageProgressSnapshots } from '@/lib/project-progress/project-progress-builders';
 import { buildProjectRiskSignals } from '@/lib/project-progress/project-risk-builders';
@@ -8,37 +6,34 @@ import { buildResourcePressureSnapshots } from '@/lib/resources/resource-pressur
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { ProjectDetailSnapshot } from '@/lib/types/project-detail';
 import { buildVersionGovernanceRecords } from '@/lib/version-governance/version-governance-builders';
-
-const projectIdMap: Record<string, string> = {
-  'pm-workbench': 'project-pm-workbench',
-  'ops-console': 'project-ops-console'
-};
+import { resolveProjectId, getProjectIdentity, getBaseProject, getManpowerProject } from '@/lib/identity/unified-project-registry';
 
 export function buildProjectDetailSnapshot(projectId: string): ProjectDetailSnapshot | null {
-  const baseProject = projects.find((project) => project.id === projectId);
+  const baseProject = getBaseProject(projectId);
   if (!baseProject) return null;
 
-  const mappedProjectId = projectIdMap[projectId];
-  const progressSnapshot = mappedProjectId
-    ? buildProjectProgressSnapshots(projectVersionLinkRecords).find((snapshot) => snapshot.projectId === mappedProjectId)
+  const identity = getProjectIdentity(projectId);
+  const canonicalId = identity?.canonicalId ?? resolveProjectId(projectId);
+  const hasManpower = identity?.hasManpowerData ?? false;
+
+  const progressSnapshot = hasManpower
+    ? buildProjectProgressSnapshots(projectVersionLinkRecords).find((snapshot) => snapshot.projectId === canonicalId)
     : null;
-  const stageSnapshots = mappedProjectId ? buildProjectStageProgressSnapshots(mappedProjectId) : [];
-  const riskSignals = mappedProjectId ? buildProjectRiskSignals(mappedProjectId) : [];
-  const resourcePressure = mappedProjectId
-    ? buildResourcePressureSnapshots().find((snapshot) => snapshot.projectId === mappedProjectId)
+  const stageSnapshots = hasManpower ? buildProjectStageProgressSnapshots(canonicalId) : [];
+  const riskSignals = hasManpower ? buildProjectRiskSignals(canonicalId) : [];
+  const resourcePressure = hasManpower
+    ? buildResourcePressureSnapshots().find((snapshot) => snapshot.projectId === canonicalId)
     : null;
-  const costSnapshot = mappedProjectId
-    ? buildProjectCostComparisonSnapshots().find((snapshot) => snapshot.projectId === mappedProjectId)
+  const costSnapshot = hasManpower
+    ? buildProjectCostComparisonSnapshots().find((snapshot) => snapshot.projectId === canonicalId)
     : null;
-  const versionLink = mappedProjectId
-    ? projectVersionLinkRecords.find((link) => link.projectId === mappedProjectId)
+  const versionLink = hasManpower
+    ? projectVersionLinkRecords.find((link) => link.projectId === canonicalId)
     : null;
   const versionRecord = versionLink
     ? buildVersionGovernanceRecords().records.find((record) => record.linkedVersionId === versionLink.linkedVersionId)
     : null;
-  const mappedProject = mappedProjectId
-    ? manpowerProjects.find((project) => project.id === mappedProjectId)
-    : null;
+  const mappedProject = getManpowerProject(projectId);
 
   return {
     projectId,
