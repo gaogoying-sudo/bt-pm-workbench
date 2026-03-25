@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { releaseWindowRecords } from '@/data/version-governance/release-window-records';
 import { PageHeader } from '@/components/ui/page-header';
 import { InfoCard } from '@/components/ui/info-card';
@@ -9,10 +10,13 @@ import { RuleContextPanel } from '@/components/shared/rule-context-panel';
 import { SnapshotContextPanel } from '@/components/shared/snapshot-context-panel';
 import { SourceContextPanel } from '@/components/shared/source-context-panel';
 import { buildVersionGovernanceRecords } from '@/lib/version-governance/version-governance-builders';
+import { buildVersionQualityGateRecords } from '@/lib/quality/quality-builders';
+import { qualityStatusLabels } from '@/lib/view-config/quality-labels';
+import { buildVersionGovernanceTimelinePoints } from '@/lib/snapshots/timeline-builders';
 import { commonViewModes } from '@/lib/view-config/filter-options';
 import { fieldLabel } from '@/lib/view-config/label-maps';
 import { formatBilingualLabel } from '@/lib/view-config/bilingual-label-builders';
-import { mapRiskTone } from '@/lib/view-config/tone-mappers';
+import { mapQualityTone, mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { releaseStatusLabels, signalSeverityLabels } from '@/lib/view-config/status-labels';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
@@ -22,7 +26,19 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
 });
 
 export function VersionGovernanceWorkbench() {
-  const governance = useMemo(() => buildVersionGovernanceRecords(), []);
+  const searchParams = useSearchParams();
+  const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
+  const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
+  const compareDateParam = searchParams.get('compareDate') ?? undefined;
+
+  const governance = useMemo(
+    () =>
+      buildVersionGovernanceRecords({
+        snapshotContext: { snapshotDate: snapshotDateParam, baselineDate: baselineDateParam, compareDate: compareDateParam }
+      }),
+    [snapshotDateParam, baselineDateParam, compareDateParam]
+  );
+  const versionQualityGates = useMemo(() => buildVersionQualityGateRecords(), []);
   const [selectedVersionId, setSelectedVersionId] = useState(governance.records[0]?.linkedVersionId ?? '');
   const [selectedRisk, setSelectedRisk] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'on-track' | 'watching' | 'blocked' | 'ready-to-release'>('all');
@@ -51,6 +67,31 @@ export function VersionGovernanceWorkbench() {
   const readiness = governance.readinessRecords.find((record) => record.linkedVersionId === selectedRecord?.linkedVersionId);
   const risks = governance.riskSignals.filter((signal) => signal.linkedVersionId === selectedRecord?.linkedVersionId);
   const releaseWindow = releaseWindowRecords.find((window) => window.linkedVersionId === selectedRecord?.linkedVersionId);
+  const qualityGate = versionQualityGates.find((g) => g.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
+
+  const currentPoint = useMemo(() => {
+    if (!selectedRecord?.snapshotContext?.snapshotDate) return null;
+    return (
+      buildVersionGovernanceTimelinePoints(selectedRecord.snapshotContext.snapshotDate).find(
+        (p) => p.linkedVersionId === selectedRecord.linkedVersionId
+      ) ?? null
+    );
+  }, [selectedRecord?.linkedVersionId, selectedRecord?.snapshotContext?.snapshotDate]);
+
+  const baselinePoint = useMemo(() => {
+    const d = selectedRecord?.snapshotContext?.baselineDate;
+    if (!d) return null;
+    return buildVersionGovernanceTimelinePoints(d).find((p) => p.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
+  }, [selectedRecord?.linkedVersionId, selectedRecord?.snapshotContext?.baselineDate]);
+
+  const comparePoint = useMemo(() => {
+    const d = selectedRecord?.snapshotContext?.compareDate;
+    if (!d) return null;
+    return buildVersionGovernanceTimelinePoints(d).find((p) => p.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
+  }, [selectedRecord?.linkedVersionId, selectedRecord?.snapshotContext?.compareDate]);
+
+  const deltaBaseline = currentPoint && baselinePoint ? currentPoint.averageProgress - baselinePoint.averageProgress : null;
+  const deltaCompare = currentPoint && comparePoint ? currentPoint.averageProgress - comparePoint.averageProgress : null;
 
   return (
     <div className="space-y-6">
@@ -69,6 +110,31 @@ export function VersionGovernanceWorkbench() {
         <InfoCard title="阻塞版本 / Blocked Versions" value={filteredRecords.filter((item) => item.governanceStatus === 'blocked').length} />
         <InfoCard title="可发布版本 / Ready Versions" value={filteredRecords.filter((item) => item.releaseReadinessStatus === 'ready').length} />
         <InfoCard title="可回写项目 / Write-back Ready Projects" value={filteredRecords.reduce((sum, item) => sum + item.writebackReadyProjectCount, 0)} />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <InfoCard title="质量门禁 / Quality Gate" value={qualityGate?.gateStatus ?? '-'} />
+        <InfoCard title="质量得分 / Quality Score" value={qualityGate ? percentFormatter.format(qualityGate.qualityScore) : '-'} />
+        <InfoCard title="阻塞问题 / Blocking Issues" value={qualityGate?.blockingIssues ?? 0} />
+        <InfoCard
+          title="Δ Baseline (Progress)"
+          value={deltaBaseline === null ? '-' : `${deltaBaseline >= 0 ? '+' : ''}${Math.round(deltaBaseline * 100)}%`}
+        />
+        <InfoCard
+          title="Δ Compare (Progress)"
+          value={deltaCompare === null ? '-' : `${deltaCompare >= 0 ? '+' : ''}${Math.round(deltaCompare * 100)}%`}
+        />
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">质量状态 / Quality Status</div>
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-sm font-medium text-slate-900">{qualityGate?.gateName ?? 'Release Quality Gate'}</div>
+            <StatusBadge
+              label={qualityGate ? qualityStatusLabels[qualityGate.gateStatus === 'blocked' ? 'failed' : qualityGate.gateStatus === 'passed' ? 'passed' : 'pending'] : '待开始 / Pending'}
+              tone={mapQualityTone(qualityGate?.gateStatus === 'blocked' ? 'failed' : qualityGate?.gateStatus === 'passed' ? 'passed' : 'pending')}
+            />
+          </div>
+          <p className="mt-2 text-xs text-slate-500">质量门禁独立于风险聚集：风险关注不确定性/延期/阻塞，质量关注交付物评审与门禁通过率。</p>
+        </div>
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">

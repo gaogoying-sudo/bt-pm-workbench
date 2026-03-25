@@ -24,8 +24,8 @@ export function SnapshotContextPanel({
           <div className="mt-2 font-medium text-slate-900">{context.baselineDate ?? '-'}</div>
         </div>
         <div className="rounded-md bg-slate-50 p-3">
-          <div className="text-xs uppercase tracking-wide text-slate-500">对比口径 / Comparison Basis</div>
-          <div className="mt-2">{context.compareDate ?? '-'}</div>
+          <div className="text-xs uppercase tracking-wide text-slate-500">对比日期 / Compare Date</div>
+          <div className="mt-2 font-medium text-slate-900">{context.compareDate ?? '-'}</div>
         </div>
       </div>
       <p className="mt-3 text-sm text-slate-600">{context.comparisonBasis}</p>

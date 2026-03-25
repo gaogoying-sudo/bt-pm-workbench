@@ -15,6 +15,14 @@ export async function GET(request: NextRequest) {
   const gates = projectId
     ? qualityService.getGateDefinitions(projectId)
     : [];
+  const stageSnapshots = projectId ? qualityService.getStageQualitySnapshots(projectId) : [];
+  const versionGates = projectId ? [] : qualityService.getVersionQualityGates();
+  const portfolioSummary = projectId ? null : qualityService.getPortfolioQualitySummary();
 
-  return toJsonResponse(success({ checks, snapshot, gates }, { total: checks.length, source: 'quality-service' }));
+  return toJsonResponse(
+    success(
+      { checks, snapshot, gates, stageSnapshots, versionGates, portfolioSummary },
+      { total: checks.length, source: 'quality-service' }
+    )
+  );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/ui/page-header';
 import { InfoCard } from '@/components/ui/info-card';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -14,16 +15,57 @@ import {
   buildVersionHealthSnapshots
 } from '@/lib/executive-dashboard/dashboard-builders';
 import { mapRiskTone } from '@/lib/view-config/tone-mappers';
+import { buildQualitySummary } from '@/lib/quality/quality-builders';
+import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
+import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const currencyFormatter = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 0 });
 
 export function ExecutiveDashboardWorkbench() {
+  const searchParams = useSearchParams();
+  const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
+  const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
+  const compareDateParam = searchParams.get('compareDate') ?? undefined;
+
   const overview = useMemo(() => buildExecutiveOverviewSnapshot(), []);
   const projectHealth = useMemo(() => buildProjectHealthSnapshots(), []);
   const resourceHealth = useMemo(() => buildResourceHealthSnapshot(), []);
   const versionHealth = useMemo(() => buildVersionHealthSnapshots(), []);
   const deliveryRisks = useMemo(() => buildDeliveryRiskSnapshots(), []);
+  const qualitySummary = useMemo(() => buildQualitySummary('portfolio', null), []);
+
+  const snapshotContext = useMemo(
+    () =>
+      buildSnapshotContext({
+        snapshotDate: snapshotDateParam,
+        baselineDate: baselineDateParam,
+        compareDate: compareDateParam,
+        notes: 'Executive Dashboard 已接入多时点快照口径：current / baseline / compare。'
+      }),
+    [snapshotDateParam, baselineDateParam, compareDateParam]
+  );
+
+  const currentPoints = useMemo(
+    () => buildProjectProgressTimelinePoints(snapshotContext.snapshotDate),
+    [snapshotContext.snapshotDate]
+  );
+  const baselinePoints = useMemo(
+    () => (snapshotContext.baselineDate ? buildProjectProgressTimelinePoints(snapshotContext.baselineDate) : null),
+    [snapshotContext.baselineDate]
+  );
+  const comparePoints = useMemo(
+    () => (snapshotContext.compareDate ? buildProjectProgressTimelinePoints(snapshotContext.compareDate) : null),
+    [snapshotContext.compareDate]
+  );
+
+  const avg = (points: typeof currentPoints | null) =>
+    !points || points.length === 0 ? 0 : points.reduce((sum, p) => sum + p.overallProgress, 0) / points.length;
+  const avgCurrent = avg(currentPoints);
+  const avgBaseline = avg(baselinePoints);
+  const avgCompare = avg(comparePoints);
+  const deltaBaseline = baselinePoints ? avgCurrent - avgBaseline : null;
+  const deltaCompare = comparePoints ? avgCurrent - avgCompare : null;
 
   return (
     <div className="space-y-6">
@@ -39,6 +81,21 @@ export function ExecutiveDashboardWorkbench() {
         <InfoCard title="高风险项目 / High-risk Projects" value={overview.highRiskProjects} />
         <InfoCard title="可发布版本 / Ready Versions" value={overview.readyVersions} />
         <InfoCard title="人力回写成本 / Write-back Cost" value={currencyFormatter.format(overview.totalWritebackCost)} />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <InfoCard
+          title="Δ Baseline (Avg Progress)"
+          value={deltaBaseline === null ? '-' : `${deltaBaseline >= 0 ? '+' : ''}${Math.round(deltaBaseline * 100)}%`}
+        />
+        <InfoCard
+          title="Δ Compare (Avg Progress)"
+          value={deltaCompare === null ? '-' : `${deltaCompare >= 0 ? '+' : ''}${Math.round(deltaCompare * 100)}%`}
+        />
+        <InfoCard title="质量得分 / Quality Score" value={percentFormatter.format(qualitySummary.qualityScore)} />
+        <InfoCard title="阻塞门禁 / Blocking Gates" value={qualitySummary.blockingGates} />
+        <InfoCard title="未闭环问题 / Open Issues" value={qualitySummary.openIssues} />
+        <InfoCard title="快照日 / Snapshot Date" value={snapshotContext.snapshotDate} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
@@ -170,7 +227,7 @@ export function ExecutiveDashboardWorkbench() {
         ]}
       />
 
-      <SnapshotContextPanel title="快照说明 / Snapshot Context" context={overview.snapshotContext} />
+      <SnapshotContextPanel title="快照说明 / Snapshot Context" context={snapshotContext} />
     </div>
   );
 }

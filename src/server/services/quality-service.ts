@@ -1,6 +1,7 @@
 import { qualityRepository } from '@/server/repositories/quality-repository';
 import { ProjectQualitySnapshot, QualityCheckRecord } from '@/lib/types/quality';
 import { resolveProjectId } from '@/lib/identity/unified-project-registry';
+import { buildQualitySummary, buildStageQualitySnapshots, buildVersionQualityGateRecords } from '@/lib/quality/quality-builders';
 
 export const qualityService = {
   listChecksByProject(projectId: string): QualityCheckRecord[] {
@@ -37,5 +38,18 @@ export const qualityService = {
 
   getGateDefinitions(projectId: string) {
     return qualityRepository.findGatesByProjectId(projectId);
+  }
+  ,
+
+  getStageQualitySnapshots(projectId: string) {
+    return buildStageQualitySnapshots(projectId);
+  },
+
+  getVersionQualityGates() {
+    return buildVersionQualityGateRecords();
+  },
+
+  getPortfolioQualitySummary() {
+    return buildQualitySummary('portfolio', null);
   }
 };

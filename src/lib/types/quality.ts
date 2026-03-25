@@ -25,6 +25,35 @@ export interface QualityCheckRecord {
   notes: string;
 }
 
+export type DeliverableType = 'prd' | 'tech-design' | 'test-plan' | 'release-note' | 'demo' | 'other';
+
+export interface DeliverableQualityRecord {
+  id: string;
+  projectId: string;
+  stageId: string | null;
+  linkedVersionId: string | null;
+  deliverableType: DeliverableType;
+  title: string;
+  ownerId: string | null;
+  reviewStatus: QualityStatus;
+  severity: QualitySeverity;
+  reviewedAt: string | null;
+  notes: string;
+}
+
+export interface QualityIssueRecord {
+  id: string;
+  projectId: string;
+  stageId: string | null;
+  linkedVersionId: string | null;
+  title: string;
+  status: 'open' | 'mitigating' | 'closed';
+  severity: QualitySeverity;
+  createdAt: string;
+  closedAt: string | null;
+  notes: string;
+}
+
 export interface QualityGateDefinition {
   id: string;
   projectId: string;
@@ -36,6 +65,16 @@ export interface QualityGateDefinition {
   notes: string;
 }
 
+export interface VersionQualityGateRecord {
+  id: string;
+  linkedVersionId: string;
+  gateName: string;
+  gateStatus: 'passed' | 'pending' | 'blocked';
+  qualityScore: number;
+  blockingIssues: number;
+  notes: string;
+}
+
 export interface ProjectQualitySnapshot {
   projectId: string;
   totalChecks: number;
@@ -44,5 +83,26 @@ export interface ProjectQualitySnapshot {
   pendingChecks: number;
   criticalFailures: number;
   qualityScore: number;
+  summary: string;
+}
+
+export interface StageQualitySnapshot {
+  projectId: string;
+  stageId: string;
+  totalChecks: number;
+  passedChecks: number;
+  failedChecks: number;
+  pendingChecks: number;
+  qualityScore: number;
+  summary: string;
+}
+
+export interface QualitySummaryRecord {
+  scope: 'portfolio' | 'project' | 'version';
+  scopeId: string | null;
+  totalChecks: number;
+  qualityScore: number;
+  blockingGates: number;
+  openIssues: number;
   summary: string;
 }

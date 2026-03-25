@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/ui/page-header';
 import { InfoCard } from '@/components/ui/info-card';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -13,11 +14,13 @@ import { manpowerStagePlans } from '@/data/manpower/manpower-stage-plans';
 import { projectVersionLinkRecords } from '@/data/project-progress/project-version-link-records';
 import { buildProjectProgressSnapshots, buildProjectStageProgressSnapshots } from '@/lib/project-progress/project-progress-builders';
 import { buildProjectRiskSignals } from '@/lib/project-progress/project-risk-builders';
+import { buildProjectQualitySnapshots, buildStageQualitySnapshots } from '@/lib/quality/quality-builders';
 import { commonViewModes, progressStatusOptions, resourcePressureOptions } from '@/lib/view-config/filter-options';
 import { formatBilingualLabel } from '@/lib/view-config/bilingual-label-builders';
 import { projectProgressStatusLabels, resourcePressureLabels, signalSeverityLabels } from '@/lib/view-config/status-labels';
 import { mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
+import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -26,6 +29,11 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
 });
 
 export function ProjectProgressWorkbench() {
+  const searchParams = useSearchParams();
+  const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
+  const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
+  const compareDateParam = searchParams.get('compareDate') ?? undefined;
+
   const progressSnapshots = useMemo(() => buildProjectProgressSnapshots(projectVersionLinkRecords), []);
   const [selectedProjectId, setSelectedProjectId] = useState(progressSnapshots[0]?.projectId ?? '');
   const [selectedStatus, setSelectedStatus] = useState<string | 'all'>('all');
@@ -57,8 +65,41 @@ export function ProjectProgressWorkbench() {
   const riskSignals = selectedSnapshot ? buildProjectRiskSignals(selectedSnapshot.projectId) : [];
   const versionLinks = projectVersionLinkRecords.filter((record) => record.projectId === selectedSnapshot?.projectId);
   const snapshotContext = buildSnapshotContext({
-    notes: '项目进度页面使用项目进度快照和项目风险信号，不在页面层做重复聚合。'
+    snapshotDate: snapshotDateParam,
+    baselineDate: baselineDateParam,
+    compareDate: compareDateParam,
+    notes:
+      '项目进度页面已接入多时点快照对比：current / baseline / compare。风险与质量独立展示，页面仅消费 builder 输出。'
   });
+
+  const currentPoints = useMemo(
+    () => buildProjectProgressTimelinePoints(snapshotContext.snapshotDate),
+    [snapshotContext.snapshotDate]
+  );
+  const baselinePoints = useMemo(
+    () => (snapshotContext.baselineDate ? buildProjectProgressTimelinePoints(snapshotContext.baselineDate) : null),
+    [snapshotContext.baselineDate]
+  );
+  const comparePoints = useMemo(
+    () => (snapshotContext.compareDate ? buildProjectProgressTimelinePoints(snapshotContext.compareDate) : null),
+    [snapshotContext.compareDate]
+  );
+
+  const currentPoint = currentPoints.find((p) => p.projectId === selectedSnapshot?.projectId) ?? null;
+  const baselinePoint = baselinePoints?.find((p) => p.projectId === selectedSnapshot?.projectId) ?? null;
+  const comparePoint = comparePoints?.find((p) => p.projectId === selectedSnapshot?.projectId) ?? null;
+  const deltaBaseline = currentPoint && baselinePoint ? currentPoint.overallProgress - baselinePoint.overallProgress : null;
+  const deltaCompare = currentPoint && comparePoint ? currentPoint.overallProgress - comparePoint.overallProgress : null;
+
+  const projectQualitySnapshot = useMemo(() => {
+    const qs = buildProjectQualitySnapshots();
+    return qs.find((q) => q.projectId === selectedSnapshot?.projectId) ?? null;
+  }, [selectedSnapshot?.projectId]);
+
+  const stageQualitySnapshots = useMemo(() => {
+    if (!selectedSnapshot?.projectId) return [];
+    return buildStageQualitySnapshots(selectedSnapshot.projectId);
+  }, [selectedSnapshot?.projectId]);
 
   const totalProjects = filteredSnapshots.length;
   const averageProgress =
@@ -84,6 +125,21 @@ export function ProjectProgressWorkbench() {
         <InfoCard title="高风险项目 / High-risk Projects" value={highRiskProjects} />
         <InfoCard title="阻塞项目 / Blocked Projects" value={blockedProjects} />
         <InfoCard title="可回写项目 / Write-back Ready Projects" value={writebackReadyProjects} />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <InfoCard
+          title="当前 vs 基线 / Δ Baseline"
+          value={deltaBaseline === null ? '-' : `${deltaBaseline >= 0 ? '+' : ''}${Math.round(deltaBaseline * 100)}%`}
+        />
+        <InfoCard
+          title="当前 vs 对比 / Δ Compare"
+          value={deltaCompare === null ? '-' : `${deltaCompare >= 0 ? '+' : ''}${Math.round(deltaCompare * 100)}%`}
+        />
+        <InfoCard title="质量通过率 / Quality Score" value={projectQualitySnapshot ? percentFormatter.format(projectQualitySnapshot.qualityScore) : '-'} />
+        <InfoCard title="质量失败 / Quality Failed" value={projectQualitySnapshot?.failedChecks ?? 0} />
+        <InfoCard title="质量待审 / Quality Pending" value={projectQualitySnapshot?.pendingChecks ?? 0} />
+        <InfoCard title="质量门禁 / Quality Gates" value={stageQualitySnapshots.length} />
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
