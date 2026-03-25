@@ -8,6 +8,17 @@
 - `PMW_DEBUG`: `1` to enable verbose debug (placeholder)
 - `PMW_AUTH_MODE`: `mock` (default) | `feishu`
 - `NEXT_PUBLIC_PMW_AUTH_MODE`: `mock` (default) | `feishu` (client-side switch)
+ 
+## Data exchange (import/export)
+
+- UI entry: `/data-exchange`
+- APIs:
+  - `GET /api/data-exchange`
+  - `POST /api/data-exchange/import/preview`
+  - `POST /api/data-exchange/import/apply`
+  - `POST /api/data-exchange/export/generate`
+  - `GET /api/data-exchange/import/jobs`
+  - `GET /api/data-exchange/export/jobs`
 
 ### Feishu auth env (required when `PMW_AUTH_MODE=feishu`)
 

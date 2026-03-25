@@ -37,12 +37,20 @@ export function ExecutiveDashboardWorkbench() {
   const deliveryRisks = useMemo(() => buildDeliveryRiskSnapshots(), []);
   const qualitySummary = useMemo(() => buildQualitySummary('portfolio', null), []);
   const [recentConfirmedEvents, setRecentConfirmedEvents] = useState<any[]>([]);
+  const [readinessSummaries, setReadinessSummaries] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/input-events/confirm')
       .then((r) => r.json())
       .then((json) => setRecentConfirmedEvents(json?.data?.confirmed ?? []))
       .catch(() => setRecentConfirmedEvents([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/readiness?type=project')
+      .then((r) => r.json())
+      .then((json) => setReadinessSummaries(json?.data ?? []))
+      .catch(() => setReadinessSummaries([]));
   }, []);
 
   const snapshotContext = useMemo(
@@ -83,6 +91,15 @@ export function ExecutiveDashboardWorkbench() {
   const avgCompare = avg(scoped(comparePoints));
   const deltaBaseline = baselinePoints ? avgCurrent - avgBaseline : null;
   const deltaCompare = comparePoints ? avgCurrent - avgCompare : null;
+  const scopedReadiness = useMemo(() => {
+    const list =
+      context.projectScope.mode === 'all' || context.projectScope.projectIds.length === 0
+        ? readinessSummaries
+        : readinessSummaries.filter((r) => context.projectScope.projectIds.includes(r.projectId));
+    const ready = list.filter((r) => r.readinessLevel === 'ready').length;
+    const blocked = list.filter((r) => r.readinessLevel === 'blocked').length;
+    return { total: list.length, ready, blocked };
+  }, [context.projectScope.mode, context.projectScope.projectIds, readinessSummaries]);
 
   return (
     <div className="space-y-6">
@@ -113,6 +130,15 @@ export function ExecutiveDashboardWorkbench() {
         <InfoCard title="阻塞门禁 / Blocking Gates" value={qualitySummary.blockingGates} />
         <InfoCard title="未闭环问题 / Open Issues" value={qualitySummary.openIssues} />
         <InfoCard title="快照日 / Snapshot Date" value={snapshotContext.snapshotDate} />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <InfoCard title="外部就绪项目 / External Ready" value={`${scopedReadiness.ready}/${scopedReadiness.total}`} />
+        <InfoCard title="外部阻塞 / External Blocked" value={scopedReadiness.blocked} />
+        <InfoCard title="协同摘要 / Collaboration" value="import/export ready" />
+        <InfoCard title="映射缺口 / Mapping Gaps" value={Math.max(0, scopedReadiness.total - scopedReadiness.ready)} />
+        <InfoCard title="导出目标 / Export Targets" value="archive/mgmt" />
+        <InfoCard title="导入来源 / Import Sources" value="json/file" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">

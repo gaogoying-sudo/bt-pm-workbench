@@ -28,6 +28,7 @@ const navGroups: NavGroup[] = [
     label: '索引与治理 / Index & Governance',
     items: [
       ['输入收件箱 / Input Inbox', '/input-inbox'],
+      ['导入导出 / Data Exchange', '/data-exchange'],
       ['任务索引 / Tasks (Legacy)', '/tasks'],
       ['版本索引 / Versions', '/versions'],
       ['文档索引 / Docs Index', '/docs-index'],
