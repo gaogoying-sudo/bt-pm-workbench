@@ -14,6 +14,7 @@ import { qualityService } from '@/server/services/quality-service';
 import { inputEventRepository } from '@/server/repositories/input-event-repository';
 import { buildProjectExternalReadinessSummaries } from '@/lib/integrations/readiness-builders';
 import { dataExchangeRepository } from '@/server/repositories/data-exchange-repository';
+import { reviewService } from '@/server/services/review-service';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -49,6 +50,7 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
     dataExchangeRepository
       .listBindings()
       .find((b) => b.internalType === 'project' && b.internalId === canonicalId && b.status === 'active') ?? null;
+  const reviewPack = reviewService.listPack({ projectId: canonicalId });
 
   return (
     <PageContainer>
@@ -205,6 +207,39 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
           <p className="mt-1 text-xs text-slate-500">
             该映射由 import apply 或手工维护写入。缺失映射会导致 supply readiness 降级。
           </p>
+        </article>
+      </section>
+
+      <section className="mt-4 grid gap-4 lg:grid-cols-3">
+        <article className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">
+          <h3 className="mb-2 font-medium text-slate-900">复盘与决策 / Reviews & Decisions</h3>
+          <div className="text-sm text-slate-700">
+            <div className="rounded-md bg-slate-50 p-3">
+              <div className="font-medium text-slate-900">Recent decisions</div>
+              <ul className="mt-2 list-disc pl-5">
+                {reviewPack.decisions.slice(0, 3).map((d) => (
+                  <li key={d.id}>
+                    <span className="font-medium">{d.title}</span> — <span className="text-xs text-slate-500">{d.decidedAt}</span>
+                  </li>
+                ))}
+              </ul>
+              {reviewPack.decisions.length === 0 ? <p className="mt-2 text-sm text-slate-500">暂无决策记录。</p> : null}
+            </div>
+            <div className="mt-3 rounded-md bg-slate-50 p-3">
+              <div className="font-medium text-slate-900">Lessons learned</div>
+              <ul className="mt-2 list-disc pl-5">
+                {reviewPack.lessons.slice(0, 3).map((l) => (
+                  <li key={l.id}>{l.title}</li>
+                ))}
+              </ul>
+              {reviewPack.lessons.length === 0 ? <p className="mt-2 text-sm text-slate-500">暂无经验沉淀。</p> : null}
+            </div>
+          </div>
+        </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 font-medium text-slate-900">指标口径 / Metric Contract</h3>
+          <p className="text-sm text-slate-700">本项目关键指标口径已进入 `/api/metrics` 统一治理。</p>
+          <p className="mt-1 text-xs text-slate-500">页面不再自行定义 health/readiness/status 规则，避免历史口径漂移。</p>
         </article>
       </section>
 

@@ -19,6 +19,7 @@ import { buildQualitySummary } from '@/lib/quality/quality-builders';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
 import { useCurrentUser } from '@/components/identity/current-user-provider';
+import { MetricBadge } from '@/components/governance/metric-badge';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const currencyFormatter = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 0 });
@@ -38,6 +39,7 @@ export function ExecutiveDashboardWorkbench() {
   const qualitySummary = useMemo(() => buildQualitySummary('portfolio', null), []);
   const [recentConfirmedEvents, setRecentConfirmedEvents] = useState<any[]>([]);
   const [readinessSummaries, setReadinessSummaries] = useState<any[]>([]);
+  const [governancePack, setGovernancePack] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/input-events/confirm')
@@ -51,6 +53,13 @@ export function ExecutiveDashboardWorkbench() {
       .then((r) => r.json())
       .then((json) => setReadinessSummaries(json?.data ?? []))
       .catch(() => setReadinessSummaries([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/data-governance?scope=portfolio')
+      .then((r) => r.json())
+      .then((json) => setGovernancePack(json?.data ?? null))
+      .catch(() => setGovernancePack(null));
   }, []);
 
   const snapshotContext = useMemo(
@@ -139,6 +148,34 @@ export function ExecutiveDashboardWorkbench() {
         <InfoCard title="映射缺口 / Mapping Gaps" value={Math.max(0, scopedReadiness.total - scopedReadiness.ready)} />
         <InfoCard title="导出目标 / Export Targets" value="archive/mgmt" />
         <InfoCard title="导入来源 / Import Sources" value="json/file" />
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-medium text-slate-900">指标口径与可信度 / Metric Governance & Trust</h2>
+            <p className="text-sm text-slate-500">核心指标口径冻结：页面不再各算各的（v0 governance）。</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <MetricBadge metricCode="project.healthScore" />
+            <MetricBadge metricCode="project.progressDelta" />
+            <MetricBadge metricCode="external.readiness" />
+          </div>
+        </div>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+            <div className="font-medium text-slate-900">可信度 / Trust</div>
+            <div className="mt-2">{governancePack?.trustMarkers?.[0]?.trustLevel ?? '-'}</div>
+            <div className="mt-1 text-xs text-slate-500">{governancePack?.trustMarkers?.[0]?.notes ?? ''}</div>
+          </div>
+          <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+            <div className="font-medium text-slate-900">异常提示 / Data Quality</div>
+            <div className="mt-2">{(governancePack?.checks ?? []).length} checks</div>
+            <div className="mt-1 text-xs text-slate-500">
+              {(governancePack?.checks ?? []).slice(0, 2).map((c: any) => c.title).join(' · ') || 'No warnings.'}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
