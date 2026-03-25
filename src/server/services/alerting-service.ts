@@ -47,7 +47,8 @@ function ensurePersisted(alerts: AlertRecord[], recs: RecommendationRecord[]) {
 function buildEventBacklogIndicator(): LeadIndicatorRecord {
   const drafts = inputEventRepository.listDrafts('awaiting-confirmation');
   const value = drafts.length;
-  const status = value >= 8 ? 'blocked' : value >= 3 ? 'watching' : 'good';
+  // post-launch calibration: reduce noise for small teams
+  const status = value >= 10 ? 'blocked' : value >= 5 ? 'watching' : 'good';
   return {
     id: `lead-event-backlog`,
     indicatorType: 'backlog',
@@ -134,8 +135,8 @@ function buildAlertsAndRecommendations(snapshotDate: string, scope?: { scope: 'p
 
   // Alert: input backlog
   const backlog = inputEventRepository.listDrafts('awaiting-confirmation').length;
-  if (alertRules.find((r) => r.code === 'alert.input.backlog' && r.enabled) && backlog >= 3 && sScope === 'portfolio') {
-    const severity = backlog >= 8 ? 'critical' : 'warning';
+  if (alertRules.find((r) => r.code === 'alert.input.backlog' && r.enabled) && backlog >= 5 && sScope === 'portfolio') {
+    const severity = backlog >= 10 ? 'critical' : 'warning';
     const alertId = `alert-backlog-${snapshotDate}`;
     alerts.push({
       id: alertId,
