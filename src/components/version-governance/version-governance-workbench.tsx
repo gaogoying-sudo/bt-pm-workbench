@@ -18,6 +18,7 @@ import { fieldLabel } from '@/lib/view-config/label-maps';
 import { formatBilingualLabel } from '@/lib/view-config/bilingual-label-builders';
 import { mapQualityTone, mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { releaseStatusLabels, signalSeverityLabels } from '@/lib/view-config/status-labels';
+import { AlertPanel } from '@/components/alerting/alert-panel';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -349,6 +350,10 @@ export function VersionGovernanceWorkbench() {
           )}
         </article>
       </section>
+
+      {selectedRecord?.linkedVersionId ? (
+        <AlertPanel scope="version" scopeId={selectedRecord.linkedVersionId} title="版本主动预警与建议 / Version Alerts & Recommendations" />
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <SourceContextPanel

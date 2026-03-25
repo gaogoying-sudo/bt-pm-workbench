@@ -15,6 +15,7 @@ import { inputEventRepository } from '@/server/repositories/input-event-reposito
 import { buildProjectExternalReadinessSummaries } from '@/lib/integrations/readiness-builders';
 import { dataExchangeRepository } from '@/server/repositories/data-exchange-repository';
 import { reviewService } from '@/server/services/review-service';
+import { AlertPanel } from '@/components/alerting/alert-panel';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -242,6 +243,10 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
           <p className="mt-1 text-xs text-slate-500">页面不再自行定义 health/readiness/status 规则，避免历史口径漂移。</p>
         </article>
       </section>
+
+      <div className="mt-4">
+        <AlertPanel scope="project" scopeId={canonicalId} title="项目主动预警与建议 / Project Alerts & Recommendations" />
+      </div>
 
       <section className="mt-4 grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <SourceContextPanel

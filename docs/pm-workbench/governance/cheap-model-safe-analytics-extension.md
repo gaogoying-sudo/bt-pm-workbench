@@ -15,6 +15,8 @@ This guide prevents metric drift and “shadow metrics”.
 - Metrics: `GET /api/metrics` + `src/lib/types/metrics.ts`
 - Data governance: `GET /api/data-governance` + `src/lib/types/data-quality.ts`
 - Reviews/decisions: `GET /api/reviews` + `src/lib/types/reviews.ts`
+- Alerting: `GET /api/alerting` + `src/lib/types/alerting.ts`
+- Recommendations: `GET /api/recommendations` + `src/lib/types/recommendations.ts`
 
 ## Common extension templates
 
@@ -41,4 +43,10 @@ This guide prevents metric drift and “shadow metrics”.
 ### 5) Add a new data quality check
 - Implement in `src/server/services/data-governance-service.ts`
 - Ensure it has evidence + suggested action
+
+### 6) Add a new proactive alert + recommendation
+- Add rule in `src/data/alerting/alert-rules.ts` (versioned)
+- Implement in `src/server/services/alerting-service.ts`
+- Map to playbook in `src/data/alerting/playbooks.ts`
+- Keep `why` + `evidence[]` mandatory
 

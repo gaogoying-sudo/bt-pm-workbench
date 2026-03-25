@@ -21,6 +21,7 @@ import { projectProgressStatusLabels, resourcePressureLabels, signalSeverityLabe
 import { mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
+import { AlertPanel } from '@/components/alerting/alert-panel';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -338,6 +339,8 @@ export function ProjectProgressWorkbench() {
           </div>
         </article>
       </section>
+
+      <AlertPanel scope="project" scopeId={selectedSnapshot?.projectId ?? null} title="所选项目主动预警 / Selected Project Alerts" />
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <SourceContextPanel

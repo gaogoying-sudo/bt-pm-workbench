@@ -20,6 +20,7 @@ import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
 import { useCurrentUser } from '@/components/identity/current-user-provider';
 import { MetricBadge } from '@/components/governance/metric-badge';
+import { AlertPanel } from '@/components/alerting/alert-panel';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const currencyFormatter = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 0 });
@@ -177,6 +178,8 @@ export function ExecutiveDashboardWorkbench() {
           </div>
         </div>
       </section>
+
+      <AlertPanel scope="portfolio" title="主动预警与建议 / Proactive Governance" />
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <article className="rounded-lg border border-slate-200 bg-white">
