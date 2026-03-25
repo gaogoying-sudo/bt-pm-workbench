@@ -39,6 +39,14 @@ export function VersionGovernanceWorkbench() {
     [snapshotDateParam, baselineDateParam, compareDateParam]
   );
   const versionQualityGates = useMemo(() => buildVersionQualityGateRecords(), []);
+  const [externalReleaseReadiness, setExternalReleaseReadiness] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/readiness?type=version')
+      .then((r) => r.json())
+      .then((json) => setExternalReleaseReadiness(json?.data ?? []))
+      .catch(() => setExternalReleaseReadiness([]));
+  }, []);
   const [selectedVersionId, setSelectedVersionId] = useState(governance.records[0]?.linkedVersionId ?? '');
   const [selectedRisk, setSelectedRisk] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'on-track' | 'watching' | 'blocked' | 'ready-to-release'>('all');
@@ -68,6 +76,7 @@ export function VersionGovernanceWorkbench() {
   const risks = governance.riskSignals.filter((signal) => signal.linkedVersionId === selectedRecord?.linkedVersionId);
   const releaseWindow = releaseWindowRecords.find((window) => window.linkedVersionId === selectedRecord?.linkedVersionId);
   const qualityGate = versionQualityGates.find((g) => g.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
+  const externalReady = externalReleaseReadiness.find((r) => r.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
 
   const currentPoint = useMemo(() => {
     if (!selectedRecord?.snapshotContext?.snapshotDate) return null;
@@ -116,6 +125,8 @@ export function VersionGovernanceWorkbench() {
         <InfoCard title="质量门禁 / Quality Gate" value={qualityGate?.gateStatus ?? '-'} />
         <InfoCard title="质量得分 / Quality Score" value={qualityGate ? percentFormatter.format(qualityGate.qualityScore) : '-'} />
         <InfoCard title="阻塞问题 / Blocking Issues" value={qualityGate?.blockingIssues ?? 0} />
+        <InfoCard title="外部就绪 / External Readiness" value={externalReady?.readinessLevel ?? '-'} />
+        <InfoCard title="Release readiness" value={externalReady?.releaseReadinessStatus ?? '-'} />
         <InfoCard
           title="Δ Baseline (Progress)"
           value={deltaBaseline === null ? '-' : `${deltaBaseline >= 0 ? '+' : ''}${Math.round(deltaBaseline * 100)}%`}
