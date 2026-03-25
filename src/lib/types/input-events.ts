@@ -29,6 +29,7 @@ export type InputEventType =
 export type EventTargetType =
   | 'project'
   | 'stage'
+  | 'version'
   | 'task-execution'
   | 'person'
   | 'role'
@@ -87,6 +88,9 @@ export type StructuredDraftPayload =
       stageId: string | null;
       progressDelta: number; // -1..1
       comment: string;
+      meetingId?: string | null;
+      meetingDate?: string | null;
+      stageStatus?: 'not-started' | 'in-progress' | 'blocked' | 'done' | null;
     }
   | {
       eventType: 'task-activity';
@@ -114,6 +118,8 @@ export type StructuredDraftPayload =
       title: string;
       severity: 'low' | 'medium' | 'high';
       summary: string;
+      ownerPersonId?: string | null;
+      mitigationStatus?: 'open' | 'mitigating' | 'mitigated' | 'accepted' | null;
     }
   | {
       eventType: 'quality-check';
@@ -131,6 +137,18 @@ export type StructuredDraftPayload =
       projectId: string | null;
       title: string;
       content: string;
+      meetingId?: string | null;
+      meetingDate?: string | null;
+      linkedVersionId?: string | null;
+      decisionType?: 'weekly-sync' | 'release-review' | 'general' | null;
+      releaseDecision?: 'go' | 'no-go' | 'defer' | null;
+      followups?: Array<{
+        title: string;
+        ownerPersonId: string | null;
+        dueDate: string;
+        status?: 'open' | 'in-progress' | 'done' | 'cancelled';
+        notes?: string;
+      }>;
     };
 
 export interface StructuredDraftRecord {

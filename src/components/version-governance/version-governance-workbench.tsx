@@ -19,6 +19,7 @@ import { formatBilingualLabel } from '@/lib/view-config/bilingual-label-builders
 import { mapQualityTone, mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { releaseStatusLabels, signalSeverityLabels } from '@/lib/view-config/status-labels';
 import { AlertPanel } from '@/components/alerting/alert-panel';
+import { useCurrentUser } from '@/components/identity/current-user-provider';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -27,6 +28,7 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
 });
 
 export function VersionGovernanceWorkbench() {
+  const { currentUserId } = useCurrentUser();
   const searchParams = useSearchParams();
   const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
   const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
@@ -78,6 +80,29 @@ export function VersionGovernanceWorkbench() {
   const releaseWindow = releaseWindowRecords.find((window) => window.linkedVersionId === selectedRecord?.linkedVersionId);
   const qualityGate = versionQualityGates.find((g) => g.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
   const externalReady = externalReleaseReadiness.find((r) => r.linkedVersionId === selectedRecord?.linkedVersionId) ?? null;
+  const [reviewPack, setReviewPack] = useState<any>(null);
+
+  useEffect(() => {
+    if (!selectedRecord?.linkedVersionId) return;
+    fetch(`/api/reviews?versionId=${encodeURIComponent(selectedRecord.linkedVersionId)}`)
+      .then((r) => r.json())
+      .then((json) => setReviewPack(json?.data ?? null))
+      .catch(() => setReviewPack(null));
+  }, [selectedRecord?.linkedVersionId]);
+
+  async function recordReleaseDecision(decision: 'go' | 'no-go' | 'defer') {
+    if (!selectedRecord?.linkedVersionId) return;
+    await fetch('/api/input-events/raw', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sourceType: 'structured-form',
+        rawText: `Release review decision: ${decision} for ${selectedRecord.linkedVersionId}`
+      })
+    });
+    // We rely on draft/confirm flow for human-in-the-loop; user confirms in /input-inbox.
+    window.open('/input-inbox', '_blank');
+  }
 
   const currentPoint = useMemo(() => {
     if (!selectedRecord?.snapshotContext?.snapshotDate) return null;
@@ -354,6 +379,40 @@ export function VersionGovernanceWorkbench() {
       {selectedRecord?.linkedVersionId ? (
         <AlertPanel scope="version" scopeId={selectedRecord.linkedVersionId} title="版本主动预警与建议 / Version Alerts & Recommendations" />
       ) : null}
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-medium text-slate-900">发布评审结论 / Release Review Decision</h2>
+            <p className="text-sm text-slate-500">场景B：通过 Input Inbox 的 confirm/writeback 留痕决策与 followups。</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" onClick={() => recordReleaseDecision('go')}>
+              Record GO
+            </button>
+            <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" onClick={() => recordReleaseDecision('no-go')}>
+              Record NO-GO
+            </button>
+            <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" onClick={() => recordReleaseDecision('defer')}>
+              Record DEFER
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 text-sm text-slate-700">
+          <div className="rounded-md bg-slate-50 p-3">
+            <div className="font-medium text-slate-900">Recent decisions (version)</div>
+            <ul className="mt-2 list-disc pl-5">
+              {(reviewPack?.decisions ?? []).slice(0, 3).map((d: any) => (
+                <li key={d.id}>
+                  <span className="font-medium">{d.title}</span> — <span className="text-xs text-slate-500">{d.decidedAt}</span>
+                </li>
+              ))}
+            </ul>
+            {(reviewPack?.decisions ?? []).length === 0 ? <p className="mt-2 text-sm text-slate-500">暂无版本决策。</p> : null}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">Current user: {currentUserId}</p>
+        </div>
+      </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <SourceContextPanel
