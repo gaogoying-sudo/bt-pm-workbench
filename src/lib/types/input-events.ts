@@ -37,7 +37,7 @@ export type EventTargetType =
   | 'snapshot-batch';
 
 export interface EventActorRecord {
-  actorId: string;
+  personId: string;
   actorType: 'user' | 'system';
   displayName?: string;
 }

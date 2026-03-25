@@ -27,6 +27,7 @@ import { buildTaskExecutionAggregates } from '@/lib/task-execution/task-aggregat
 import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
 import { MOCK_TODAY } from '@/lib/task-execution/summary-builders';
 import { commonViewModes, taskStatusOptions as sharedTaskStatusOptions } from '@/lib/view-config/filter-options';
+import { useCurrentUser } from '@/components/identity/current-user-provider';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -56,6 +57,7 @@ function riskTone(level: 'low' | 'medium' | 'high') {
 }
 
 export function TaskExecutionWorkbench() {
+  const { context } = useCurrentUser();
   const [selectedTaskId, setSelectedTaskId] = useState(taskExecutionRecords[0]?.id ?? '');
   const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>('all');
   const [selectedStageId, setSelectedStageId] = useState<string | 'all'>('all');
@@ -66,6 +68,9 @@ export function TaskExecutionWorkbench() {
   const [recentConfirmedEvents, setRecentConfirmedEvents] = useState<any[]>([]);
 
   const filteredTasks = taskExecutionRecords.filter((task) => {
+    if (context.projectScope.mode !== 'all' && context.projectScope.projectIds.length > 0) {
+      if (!context.projectScope.projectIds.includes(task.projectId)) return false;
+    }
     if (selectedProjectId !== 'all' && task.projectId !== selectedProjectId) return false;
     if (selectedStageId !== 'all' && task.stageId !== selectedStageId) return false;
     if (selectedStatus !== 'all' && task.status !== selectedStatus) return false;

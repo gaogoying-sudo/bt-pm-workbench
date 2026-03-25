@@ -4,7 +4,7 @@ import { inputDraftService } from '@/server/services/input-draft-service';
 import { inputEventRepository } from '@/server/repositories/input-event-repository';
 
 function actorFromRequest() {
-  return { actorId: 'user-local', actorType: 'user' as const, displayName: 'Local User' };
+  return { personId: 'person-alice', actorType: 'user' as const, displayName: 'Alice Zhang' };
 }
 
 export async function GET(_request: NextRequest) {

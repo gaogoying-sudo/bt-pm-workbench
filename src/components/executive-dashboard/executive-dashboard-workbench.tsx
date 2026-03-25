@@ -18,11 +18,13 @@ import { mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { buildQualitySummary } from '@/lib/quality/quality-builders';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
+import { useCurrentUser } from '@/components/identity/current-user-provider';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const currencyFormatter = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 0 });
 
 export function ExecutiveDashboardWorkbench() {
+  const { context } = useCurrentUser();
   const searchParams = useSearchParams();
   const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
   const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
@@ -69,9 +71,16 @@ export function ExecutiveDashboardWorkbench() {
 
   const avg = (points: typeof currentPoints | null) =>
     !points || points.length === 0 ? 0 : points.reduce((sum, p) => sum + p.overallProgress, 0) / points.length;
-  const avgCurrent = avg(currentPoints);
-  const avgBaseline = avg(baselinePoints);
-  const avgCompare = avg(comparePoints);
+  const scoped = (points: typeof currentPoints | null) => {
+    if (!points) return null;
+    if (context.projectScope.mode === 'all') return points;
+    if (context.projectScope.projectIds.length === 0) return [];
+    return points.filter((p) => context.projectScope.projectIds.includes(p.projectId));
+  };
+
+  const avgCurrent = avg(scoped(currentPoints));
+  const avgBaseline = avg(scoped(baselinePoints));
+  const avgCompare = avg(scoped(comparePoints));
   const deltaBaseline = baselinePoints ? avgCurrent - avgBaseline : null;
   const deltaCompare = comparePoints ? avgCurrent - avgCompare : null;
 
