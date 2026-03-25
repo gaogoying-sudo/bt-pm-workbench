@@ -9,11 +9,8 @@ import { tasks } from '@/data/tasks';
 import { versions } from '@/data/versions';
 import { buildProjectDetailSnapshot } from '@/lib/project-detail/project-detail-builders';
 import { buildProjectStageProgressSnapshots } from '@/lib/project-progress/project-progress-builders';
-
-const projectIdMap: Record<string, string> = {
-  'pm-workbench': 'project-pm-workbench',
-  'ops-console': 'project-ops-console'
-};
+import { resolveProjectId, getProjectIdentity } from '@/lib/identity/unified-project-registry';
+import { qualityService } from '@/server/services/quality-service';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -31,10 +28,14 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
   const snapshot = buildProjectDetailSnapshot(params.projectId);
   if (!snapshot) notFound();
 
+  const identity = getProjectIdentity(params.projectId);
+  const canonicalId = identity?.canonicalId ?? resolveProjectId(params.projectId);
+
   const projectTasks = tasks.filter((item) => item.projectId === params.projectId).slice(0, 5);
   const projectVersions = versions.filter((item) => item.projectId === params.projectId).slice(0, 3);
   const projectDocs = documentRecords.filter((item) => item.projectId === params.projectId).slice(0, 4);
-  const stageSnapshots = projectIdMap[params.projectId] ? buildProjectStageProgressSnapshots(projectIdMap[params.projectId]) : [];
+  const stageSnapshots = identity?.hasManpowerData ? buildProjectStageProgressSnapshots(canonicalId) : [];
+  const qualitySnapshot = qualityService.getProjectQualitySnapshot(params.projectId);
 
   return (
     <PageContainer>
@@ -132,6 +133,21 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
           <ul className="space-y-2 text-sm text-slate-700">
             {projectDocs.map((doc) => <li key={doc.id}>{doc.title}</li>)}
           </ul>
+        </article>
+      </section>
+
+      <section className="mt-4 grid gap-4 lg:grid-cols-2">
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 font-medium text-slate-900">质量摘要 / Quality Summary</h3>
+          <p className="text-sm text-slate-700">质量检查 / Checks: {qualitySnapshot.totalChecks}</p>
+          <p className="mt-1 text-sm text-slate-700">通过率 / Pass Rate: {percentFormatter.format(qualitySnapshot.qualityScore)}</p>
+          <p className="mt-1 text-sm text-slate-700">失败 / Failed: {qualitySnapshot.failedChecks}  |  待审 / Pending: {qualitySnapshot.pendingChecks}</p>
+          <p className="mt-1 text-xs text-slate-500">{qualitySnapshot.summary}</p>
+        </article>
+        <article className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 font-medium text-slate-900">质量 vs 风险边界 / Quality vs Risk</h3>
+          <p className="text-sm text-slate-700">风险关注不确定性与延期阻塞，质量关注交付物合规性与通过率。两者在系统中独立跟踪。</p>
+          <p className="mt-1 text-sm text-slate-500">Risks track uncertainty/blockers; quality tracks deliverable compliance and pass rate. Tracked independently.</p>
         </article>
       </section>
 
