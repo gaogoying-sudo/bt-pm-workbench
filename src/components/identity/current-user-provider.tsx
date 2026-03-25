@@ -5,6 +5,7 @@ import { identityRegistry } from '@/lib/identity/identity-registry';
 import { buildCurrentUserContext, buildUserAccessContext } from '@/lib/access/access-service';
 import { CurrentUserContext } from '@/lib/types/identity';
 import { UserAccessContext } from '@/lib/types/access';
+// runtime config is server-side; client uses env-based fallback
 
 const STORAGE_KEY = 'pmw.currentUserId';
 
@@ -22,6 +23,18 @@ export function CurrentUserProvider({ children }: { children: React.ReactNode })
   const [currentUserId, setCurrentUserIdState] = useState(defaultUserId);
 
   useEffect(() => {
+    const authMode = process.env.NEXT_PUBLIC_PMW_AUTH_MODE ?? 'mock';
+    if (authMode === 'feishu') {
+      fetch('/api/auth/session')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((json) => {
+          const personId = json?.data?.session?.personId;
+          if (personId) setCurrentUserIdState(personId);
+        })
+        .catch(() => {});
+      return;
+    }
+
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored) setCurrentUserIdState(stored);
   }, []);
