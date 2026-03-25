@@ -1,29 +1,31 @@
-type StoreData = Record<string, unknown[]>;
+import { getRuntimeConfig } from '@/server/config/runtime-config';
+import { CollectionStore } from '@/server/persistence/persistence-contract';
+import { MemoryCollectionStore } from '@/server/persistence/memory-collection-store';
+import { FileCollectionStore } from '@/server/persistence/file-collection-store';
 
-const store: StoreData = {};
+let storeImpl: CollectionStore | null = null;
+
+function getStore(): CollectionStore {
+  if (storeImpl) return storeImpl;
+  const cfg = getRuntimeConfig();
+  storeImpl = cfg.persistenceMode === 'file' ? new FileCollectionStore(cfg.dataDir) : new MemoryCollectionStore();
+  return storeImpl;
+}
 
 export function getCollection<T>(name: string): T[] {
-  return (store[name] as T[] | undefined) ?? [];
+  return getStore().list<T>(name);
 }
 
 export function setCollection<T>(name: string, data: T[]): void {
-  store[name] = data as unknown[];
+  getStore().set<T>(name, data);
 }
 
 export function addItem<T extends { id: string }>(name: string, item: T): void {
-  const collection = getCollection<T>(name);
-  collection.push(item);
-  setCollection(name, collection);
+  getStore().upsert<T>(name, item);
 }
 
 export function updateItem<T extends { id: string }>(name: string, id: string, patch: Partial<T>): T | null {
-  const collection = getCollection<T>(name);
-  const index = collection.findIndex((item) => item.id === id);
-  if (index === -1) return null;
-  const updated = { ...collection[index], ...patch } as T;
-  collection[index] = updated;
-  setCollection(name, collection);
-  return updated;
+  return getStore().patch<T>(name, id, patch);
 }
 
 export function removeItem<T extends { id: string }>(name: string, id: string): boolean {
@@ -36,7 +38,7 @@ export function removeItem<T extends { id: string }>(name: string, id: string): 
 }
 
 export function findById<T extends { id: string }>(name: string, id: string): T | null {
-  return getCollection<T>(name).find((item) => item.id === id) ?? null;
+  return getStore().getById<T>(name, id);
 }
 
 export function findByFilter<T>(name: string, predicate: (item: T) => boolean): T[] {

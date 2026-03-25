@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/ui/page-header';
 import { InfoCard } from '@/components/ui/info-card';
@@ -18,11 +18,13 @@ import { mapRiskTone } from '@/lib/view-config/tone-mappers';
 import { buildQualitySummary } from '@/lib/quality/quality-builders';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { buildProjectProgressTimelinePoints } from '@/lib/snapshots/timeline-builders';
+import { useCurrentUser } from '@/components/identity/current-user-provider';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const currencyFormatter = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 0 });
 
 export function ExecutiveDashboardWorkbench() {
+  const { context } = useCurrentUser();
   const searchParams = useSearchParams();
   const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
   const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
@@ -34,6 +36,14 @@ export function ExecutiveDashboardWorkbench() {
   const versionHealth = useMemo(() => buildVersionHealthSnapshots(), []);
   const deliveryRisks = useMemo(() => buildDeliveryRiskSnapshots(), []);
   const qualitySummary = useMemo(() => buildQualitySummary('portfolio', null), []);
+  const [recentConfirmedEvents, setRecentConfirmedEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/input-events/confirm')
+      .then((r) => r.json())
+      .then((json) => setRecentConfirmedEvents(json?.data?.confirmed ?? []))
+      .catch(() => setRecentConfirmedEvents([]));
+  }, []);
 
   const snapshotContext = useMemo(
     () =>
@@ -61,9 +71,16 @@ export function ExecutiveDashboardWorkbench() {
 
   const avg = (points: typeof currentPoints | null) =>
     !points || points.length === 0 ? 0 : points.reduce((sum, p) => sum + p.overallProgress, 0) / points.length;
-  const avgCurrent = avg(currentPoints);
-  const avgBaseline = avg(baselinePoints);
-  const avgCompare = avg(comparePoints);
+  const scoped = (points: typeof currentPoints | null) => {
+    if (!points) return null;
+    if (context.projectScope.mode === 'all') return points;
+    if (context.projectScope.projectIds.length === 0) return [];
+    return points.filter((p) => context.projectScope.projectIds.includes(p.projectId));
+  };
+
+  const avgCurrent = avg(scoped(currentPoints));
+  const avgBaseline = avg(scoped(baselinePoints));
+  const avgCompare = avg(scoped(comparePoints));
   const deltaBaseline = baselinePoints ? avgCurrent - avgBaseline : null;
   const deltaCompare = comparePoints ? avgCurrent - avgCompare : null;
 
@@ -215,6 +232,22 @@ export function ExecutiveDashboardWorkbench() {
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="font-medium text-slate-900">最近确认事件 / Recent Confirmed Events</h2>
+        <div className="mt-3 space-y-2 text-sm text-slate-700">
+          {recentConfirmedEvents.slice(0, 8).map((evt) => (
+            <div key={evt.id} className="rounded-md border border-slate-200 p-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">{evt.eventType}</span>
+                <StatusBadge label={evt.status} tone="muted" />
+              </div>
+              <div className="mt-1 text-xs text-slate-500">{evt.confirmedAt}</div>
+            </div>
+          ))}
+          {recentConfirmedEvents.length === 0 ? <p className="text-sm text-slate-500">暂无事件。</p> : null}
+        </div>
       </section>
 
       <SourceContextPanel

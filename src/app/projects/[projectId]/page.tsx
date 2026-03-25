@@ -11,6 +11,7 @@ import { buildProjectDetailSnapshot } from '@/lib/project-detail/project-detail-
 import { buildProjectStageProgressSnapshots } from '@/lib/project-progress/project-progress-builders';
 import { resolveProjectId, getProjectIdentity } from '@/lib/identity/unified-project-registry';
 import { qualityService } from '@/server/services/quality-service';
+import { inputEventRepository } from '@/server/repositories/input-event-repository';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -30,6 +31,10 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
 
   const identity = getProjectIdentity(params.projectId);
   const canonicalId = identity?.canonicalId ?? resolveProjectId(params.projectId);
+  const recentEvents = inputEventRepository
+    .listConfirmed()
+    .filter((e) => e.targets.some((t) => t.targetType === 'project' && t.targetId === canonicalId))
+    .slice(0, 8);
 
   const projectTasks = tasks.filter((item) => item.projectId === params.projectId).slice(0, 5);
   const projectVersions = versions.filter((item) => item.projectId === params.projectId).slice(0, 3);
@@ -149,6 +154,25 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
           <p className="text-sm text-slate-700">风险关注不确定性与延期阻塞，质量关注交付物合规性与通过率。两者在系统中独立跟踪。</p>
           <p className="mt-1 text-sm text-slate-500">Risks track uncertainty/blockers; quality tracks deliverable compliance and pass rate. Tracked independently.</p>
         </article>
+      </section>
+
+      <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+        <h3 className="mb-2 font-medium text-slate-900">最近确认事件 / Recent Confirmed Events</h3>
+        {recentEvents.length === 0 ? (
+          <p className="text-sm text-slate-500">暂无事件。你可以去「输入收件箱」录入并确认写回。</p>
+        ) : (
+          <ul className="space-y-2 text-sm text-slate-700">
+            {recentEvents.map((evt) => (
+              <li key={evt.id} className="rounded-md border border-slate-200 p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{evt.eventType}</span>
+                  <span className="text-xs text-slate-500">{evt.confirmedAt}</span>
+                </div>
+                <div className="mt-1 text-xs text-slate-500">status: {evt.status}</div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="mt-4 grid gap-6 xl:grid-cols-[1.2fr_1fr]">

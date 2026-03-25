@@ -7,6 +7,7 @@ import { buildProjectExecutionAggregates } from '@/lib/task-execution/project-ag
 import { buildStageExecutionAggregates } from '@/lib/task-execution/stage-aggregate-selectors';
 import { buildTaskExecutionWritebackRecords } from '@/lib/task-execution/writeback-mappers';
 import { ProjectRiskSignal } from '@/lib/types/project-progress';
+import { listProjectRiskEvents } from '@/lib/input-events/event-projection-store';
 
 export function buildProjectRiskSignals(projectId: string): ProjectRiskSignal[] {
   const projectAggregate = buildProjectExecutionAggregates(projectStageTaskLinks, taskExecutionRecords, taskActivityRecords).find(
@@ -20,6 +21,7 @@ export function buildProjectRiskSignals(projectId: string): ProjectRiskSignal[] 
   const writebacks = buildTaskExecutionWritebackRecords().filter((record) => record.sourceProjectId === projectId);
 
   const signals: ProjectRiskSignal[] = [];
+  const inputRiskEvents = listProjectRiskEvents(projectId);
 
   if (projectAggregate && projectAggregate.blockedTaskCount > 0) {
     signals.push({
@@ -36,6 +38,22 @@ export function buildProjectRiskSignals(projectId: string): ProjectRiskSignal[] 
       status: 'open'
     });
   }
+
+  inputRiskEvents.forEach((evt) => {
+    signals.push({
+      id: `prs-${projectId}-input-${evt.id}`,
+      projectId,
+      signalType: 'input-risk-event',
+      severity: evt.severity,
+      title: `输入风险: ${evt.title} / Input Risk: ${evt.title}`,
+      summary: evt.summary,
+      relatedStageId: null,
+      relatedTaskIds: [],
+      sourceType: 'input-event',
+      suggestedAction: '在确认队列中补齐目标引用或拆解处置动作 / Confirm targets and add mitigation actions.',
+      status: 'open'
+    });
+  });
 
   if (projectAggregate && projectAggregate.overdueTaskCount > 0) {
     signals.push({

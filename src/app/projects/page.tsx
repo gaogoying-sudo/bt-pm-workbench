@@ -5,7 +5,6 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { SnapshotContextPanel } from '@/components/shared/snapshot-context-panel';
 import { SourceContextPanel } from '@/components/shared/source-context-panel';
 import { projectService } from '@/server/services/project-service';
-import { qualityService } from '@/server/services/quality-service';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { formatDate } from '@/lib/utils/format';
 
