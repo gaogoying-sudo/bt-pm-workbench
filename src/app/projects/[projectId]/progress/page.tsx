@@ -13,7 +13,7 @@ export default function ProjectProgressTabPage({ params }: { params: { projectId
   return (
     <>
       <PageHeader
-        title="Project Progress / 项目进度"
+        title="进度"
         description="消费 project_progress_snapshot + 快照与治理域、风险与质量域。"
       />
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading progress…</div>}>

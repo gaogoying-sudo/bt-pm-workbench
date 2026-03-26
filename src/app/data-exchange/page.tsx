@@ -9,8 +9,8 @@ export default function DataExchangePage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Data Exchange / 导入导出"
-        description={`外部协同域：import/export API、bindings、readiness_summary_snapshot（项目就绪条目 ${readiness.summaries.length}）。`}
+        title="数据交换"
+        description={`导入 / 导出 / 外部映射（演示）：就绪条目 ${readiness.summaries.length}（${readiness.readModelKey}）。`}
       />
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading data exchange…</div>}>
         <DataExchangeWorkbench />

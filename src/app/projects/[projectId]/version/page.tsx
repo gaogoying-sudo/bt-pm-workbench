@@ -11,33 +11,33 @@ export default function ProjectVersionTabPage({ params }: { params: { projectId:
   return (
     <>
       <PageHeader
-        title="Project Version / 版本治理"
+        title="版本治理"
         description="消费 version_governance_snapshot + 项目主数据 / 风险与质量 / 外部协同（readiness）。"
       />
 
-      <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+      <section className="pmw-surface mt-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="font-medium text-slate-900">Linked versions</h2>
+            <h2 className="font-medium text-slate-900">关联版本</h2>
             <p className="mt-1 text-sm text-slate-500">
-              来自 `projectVersionLinkRecords` 的项目版本关联；governance 来自 `buildVersionGovernanceRecords()`。
+              项目版本关联来自版本链路记录；治理状态来自版本治理聚合（演示数据口径）。
             </p>
           </div>
           <Link href={`/projects/${params.projectId}/reviews`} className="text-sm text-blue-700">
-            去复盘页 / Go to Reviews
+            去复盘与决策
           </Link>
         </div>
 
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-left text-slate-600">
+            <thead className="bg-blue-50/60 text-left text-slate-600">
               <tr>
-                <th className="px-4 py-3">Version</th>
-                <th className="px-4 py-3">Governance</th>
-                <th className="px-4 py-3">Release Readiness</th>
-                <th className="px-4 py-3">Δ Variance</th>
-                <th className="px-4 py-3">Active Risks</th>
-                <th className="px-4 py-3">Blocked Projects</th>
+                <th className="px-4 py-3">版本</th>
+                <th className="px-4 py-3">治理状态</th>
+                <th className="px-4 py-3">发布准备度</th>
+                <th className="px-4 py-3">偏差</th>
+                <th className="px-4 py-3">风险数</th>
+                <th className="px-4 py-3">阻塞项目数</th>
               </tr>
             </thead>
             <tbody>
@@ -49,7 +49,7 @@ export default function ProjectVersionTabPage({ params }: { params: { projectId:
                 </tr>
               ) : (
                 records.map((r) => (
-                  <tr key={r.id} className="border-t border-slate-100">
+                  <tr key={r.id} className="border-t border-slate-100 hover:bg-blue-50/30">
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">{r.versionName}</div>
                       <div className="mt-1 text-xs text-slate-500">{r.linkedVersionId}</div>
