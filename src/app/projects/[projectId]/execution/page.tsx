@@ -13,7 +13,7 @@ export default function ProjectExecutionPage({ params }: { params: { projectId: 
   return (
     <>
       <PageHeader
-        title="Project Execution / 执行"
+        title="执行"
         description="消费 project_execution_snapshot + 任务执行域 / 输入事件域；写回经 input-event 与 writeback。"
       />
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading execution…</div>}>

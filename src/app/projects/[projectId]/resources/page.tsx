@@ -14,7 +14,7 @@ export default function ProjectResourcesTabPage({ params }: { params: { projectI
   return (
     <>
       <PageHeader
-        title="Project Resources / 资源与成本"
+        title="资源与成本"
         description="消费 resource_manpower_snapshot + 身份与组织域（人员）与资源与人力投入域。"
       />
 

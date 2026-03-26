@@ -16,32 +16,34 @@ export default function ProjectsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="项目列表 / Projects" description="统一项目总入口 — 通过 project-service 接入，消费统一身份注册表。" />
+      <PageHeader title="项目列表" description="统一项目入口：以项目为中心进入详情页签（执行 / 进度 / 版本 / 资源 / 复盘）。" />
 
       <div className="mb-4 flex gap-3">
-        <input className="w-64 rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="搜索项目（占位）" />
-        <select className="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <input className="w-64 rounded-xl border border-slate-200/70 px-3 py-2 text-sm shadow-sm shadow-slate-900/5" placeholder="搜索项目（占位）" />
+        <select className="rounded-xl border border-slate-200/70 px-3 py-2 text-sm shadow-sm shadow-slate-900/5">
           <option>按状态筛选（占位）</option>
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="pmw-surface overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-slate-50 text-left text-slate-600">
+          <thead className="bg-blue-50/60 text-left text-slate-600">
             <tr>
-              <th className="px-4 py-3">项目 / Project</th>
-              <th className="px-4 py-3">阶段 / Phase</th>
-              <th className="px-4 py-3">状态 / Status</th>
-              <th className="px-4 py-3">人力数据 / Manpower</th>
-              <th className="px-4 py-3">版本 / Version</th>
-              <th className="px-4 py-3">更新时间 / Updated</th>
+              <th className="px-4 py-3">项目</th>
+              <th className="px-4 py-3">阶段</th>
+              <th className="px-4 py-3">状态</th>
+              <th className="px-4 py-3">人力数据</th>
+              <th className="px-4 py-3">版本</th>
+              <th className="px-4 py-3">更新时间</th>
             </tr>
           </thead>
           <tbody>
             {projects.map((project) => (
-              <tr key={project.id} className="border-t border-slate-100">
+              <tr key={project.id} className="border-t border-slate-100 hover:bg-blue-50/30">
                 <td className="px-4 py-3">
-                  <Link href={`/projects/${project.id}`} className="font-medium text-blue-700">{project.displayName}</Link>
+                  <Link href={`/projects/${project.id}`} className="font-medium text-blue-700 hover:text-blue-800">
+                    {project.displayName}
+                  </Link>
                   <div className="text-xs text-slate-500">{project.code} · {project.canonicalId}</div>
                 </td>
                 <td className="px-4 py-3">{project.phase}</td>
@@ -59,13 +61,13 @@ export default function ProjectsPage() {
 
       <section className="mt-4 grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <SourceContextPanel
-          title="数据来源 / Source Context"
+          title="数据来源"
           sources={[
             { name: readModelKey, detail: `生成时间 ${generatedAt}；底层仍经 projectService.listProjects。` },
             { name: 'unified-project-registry', detail: '统一项目身份注册表。' }
           ]}
         />
-        <SnapshotContextPanel title="快照口径 / Snapshot Context" context={snapshotContext} />
+        <SnapshotContextPanel title="快照口径" context={snapshotContext} />
       </section>
     </PageContainer>
   );

@@ -8,9 +8,14 @@ export default function ExecutiveDashboardPage() {
   const portfolio = readModelService.getExecutivePortfolioSnapshot();
   return (
     <PageContainer>
-      <p className="mb-3 text-xs text-slate-500">
-        Read model: {portfolio.readModelKey} · {portfolio.generatedAt} · 组合概览项目数 {portfolio.overview.totalProjects}
-      </p>
+      <div className="pmw-surface-muted mb-4 flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs text-slate-500">
+        <span>
+          组合概览：项目数 <span className="font-semibold text-slate-700">{portfolio.overview.totalProjects}</span>
+        </span>
+        <span className="font-mono">
+          {portfolio.readModelKey} · {portfolio.generatedAt}
+        </span>
+      </div>
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading executive dashboard…</div>}>
         <AccessGuard permission="view:executive-dashboard">
           <ExecutiveDashboardWorkbench />

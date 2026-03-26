@@ -10,8 +10,8 @@ export default function InputInboxPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="输入收件箱 / Input Inbox"
-        description={`低摩擦输入 → 结构化草稿 → 人工确认 → 写回。输入事件域；read model: ${inbox.readModelKey}（raw ${inbox.rawCount} · 待处理草稿 ${inbox.draftPendingCount} · 已确认 ${inbox.confirmedCount}）。`}
+        title="输入收件箱"
+        description={`把零散输入收拢成可写回事件：原始 ${inbox.rawCount} · 草稿 ${inbox.draftPendingCount} · 已确认 ${inbox.confirmedCount}（${inbox.readModelKey}）。`}
       />
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading input inbox…</div>}>
         <AccessGuard permission="view:input-inbox">

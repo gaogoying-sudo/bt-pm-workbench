@@ -5,35 +5,33 @@ import Link from 'next/link';
 export default function LoginPage() {
   return (
     <PageContainer>
-      <PageHeader title="Login / 登录" description="选择登录模式：开发 mock 或飞书真实登录（需配置 env）。" />
-      <section className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
+      <PageHeader title="登录" description="选择登录方式：演示模式或飞书 OAuth（需配置环境变量）。" />
+      <section className="pmw-surface space-y-3 p-5">
         <p className="text-sm text-slate-700">
-          默认落地：登录或跳过 OAuth 后进入 <Link href="/me">/me</Link> 工作台；需全局视图可走{' '}
-          <Link href="/executive-dashboard">Executive</Link>。
+          默认落地：进入「我的工作台」开始主流程；需要全局视角可进入「管理驾驶舱」。
         </p>
-        <a className="inline-flex rounded-md bg-slate-900 px-3 py-2 text-sm text-white" href="/api/auth/feishu/login">
-          Feishu Login URL (API)
-        </a>
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-md border border-slate-900 bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800" href="/me">
-            进入我的工作台 / Me（默认）
+          <Link className="pmw-btn pmw-btn-primary" href="/me">
+            进入我的工作台（默认）
           </Link>
-          <Link className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50" href="/me">
-            进入我的工作台 / Me
+          <Link className="pmw-btn" href="/projects">
+            进入项目列表
           </Link>
-          <Link className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50" href="/projects">
-            进入项目列表 / Projects
-          </Link>
-          <Link className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50" href="/executive-dashboard">
-            进入驾驶舱 / Executive
+          <Link className="pmw-btn" href="/executive-dashboard">
+            进入管理驾驶舱
           </Link>
         </div>
-        <p className="text-sm text-slate-500">
-          飞书登录实际跳转请调用接口拿到 url 后在前端重定向。当前先提供最小链路与配置骨架。
-        </p>
-        <p className="text-xs text-slate-500">
-          配置：PMW_AUTH_MODE=feishu + FEISHU_APP_ID/FEISHU_APP_SECRET/FEISHU_REDIRECT_URI
-        </p>
+
+        <a className="pmw-btn" href="/api/auth/feishu/login">
+          使用飞书登录（跳转）
+        </a>
+
+        <div className="rounded-xl border border-slate-200/70 bg-blue-50/50 p-4">
+          <p className="text-sm text-slate-700">环境变量（飞书模式）</p>
+          <p className="mt-1 text-xs text-slate-500">
+            PMW_AUTH_MODE=feishu · FEISHU_APP_ID · FEISHU_APP_SECRET · FEISHU_REDIRECT_URI
+          </p>
+        </div>
       </section>
     </PageContainer>
   );

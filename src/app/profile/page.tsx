@@ -15,18 +15,18 @@ export default function ProfilePage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Profile / 个人资料"
-        description="身份与组织域只读视图：当前用户来自 identity-registry；人员主数据见 GET /api/persons。"
+        title="个人资料"
+        description="中文优先：这里只展示基础身份档案（演示数据）；人员主数据可通过 /api/persons 查看。"
       />
 
       <section className="mt-4 grid gap-4 md:grid-cols-3">
-        <InfoCard title="User ID" value={currentUserId} />
-        <InfoCard title="Primary role" value={person?.primaryRoleId ?? '-'} />
-        <InfoCard title="Department" value={person?.profile.department ?? '-'} />
+        <InfoCard title="用户 ID" value={currentUserId} />
+        <InfoCard title="主角色" value={person?.primaryRoleId ?? '-'} />
+        <InfoCard title="部门" value={person?.profile.department ?? '-'} />
       </section>
 
-      <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="font-medium text-slate-900">Identity bindings</h2>
+      <section className="pmw-surface mt-4 p-4">
+        <h2 className="font-medium text-slate-900">身份绑定（轻量）</h2>
         <p className="mt-2 text-sm text-slate-600">
           飞书绑定与组织同步仍为后续小任务；主数据可通过{' '}
           <Link className="text-blue-700" href="/api/persons">

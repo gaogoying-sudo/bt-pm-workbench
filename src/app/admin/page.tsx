@@ -7,12 +7,12 @@ export default function AdminPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Admin / 后台管理"
-        description="五类管理入口（最小可运行）：与 9 大业务域 read/write 锚点关联，非空壳设置页。"
+        title="后台管理"
+        description="五类管理入口（最小可运行）：主数据 / 规则指标 / 运行任务 / 问题审计 / 演示种子。"
       />
 
       <section className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="pmw-surface p-4">
           <h2 className="font-medium text-slate-900">主数据管理</h2>
           <p className="mt-2 text-sm text-slate-600">项目、人员、任务主数据与统一身份。</p>
           <ul className="mt-3 space-y-1 text-sm text-blue-700">
@@ -28,7 +28,7 @@ export default function AdminPage() {
           </ul>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="pmw-surface p-4">
           <h2 className="font-medium text-slate-900">规则与指标管理</h2>
           <p className="mt-2 text-sm text-slate-600">指标契约、治理快照与质量口径。</p>
           <ul className="mt-3 space-y-1 text-sm text-blue-700">
@@ -44,7 +44,7 @@ export default function AdminPage() {
           </ul>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="pmw-surface p-4">
           <h2 className="font-medium text-slate-900">运行任务管理</h2>
           <p className="mt-2 text-sm text-slate-600">输入事件、写回与导出作业。</p>
           <ul className="mt-3 space-y-1 text-sm text-blue-700">
@@ -60,7 +60,7 @@ export default function AdminPage() {
           </ul>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="pmw-surface p-4">
           <h2 className="font-medium text-slate-900">问题与审计管理</h2>
           <p className="mt-2 text-sm text-slate-600">线上问题、预警与复盘收口。</p>
           <ul className="mt-3 space-y-1 text-sm text-blue-700">
@@ -76,7 +76,7 @@ export default function AdminPage() {
           </ul>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4 md:col-span-2 xl:col-span-1">
+        <div className="pmw-surface p-4 md:col-span-2 xl:col-span-1">
           <h2 className="font-medium text-slate-900">演示与种子数据管理</h2>
           <p className="mt-2 text-sm text-slate-600">本地持久化与演示数据说明（非生产终态）。</p>
           <ul className="mt-3 space-y-1 text-sm text-blue-700">
@@ -91,7 +91,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      <section className="pmw-surface-muted mt-6 p-4 text-sm text-slate-600">
         <p className="font-medium text-slate-800">业务域注册（代码锚点）</p>
         <p className="mt-2">
           九域聚合入口：<code className="text-xs">src/server/domains/business-domains.ts</code>；读模型门面：{' '}
