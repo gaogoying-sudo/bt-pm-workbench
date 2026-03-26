@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation';
-import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/ui/page-header';
-import { ProjectDetailTabs } from '@/components/projects/project-detail-tabs';
 import { reviewService } from '@/server/services/review-service';
 import { resolveProjectId, getProjectIdentity } from '@/lib/identity/unified-project-registry';
 
@@ -13,9 +11,11 @@ export default function ProjectReviewsTabPage({ params }: { params: { projectId:
   const reviewPack = reviewService.listPack({ projectId: canonicalId });
 
   return (
-    <PageContainer>
-      <ProjectDetailTabs projectId={params.projectId} activeKey="reviews" />
-      <PageHeader title="Reviews & Decisions / 复盘与决策" description="项目维度的发布评审结论、经验沉淀与后续 followups。"/>
+    <>
+      <PageHeader
+        title="Reviews & Decisions / 复盘与决策"
+        description="消费复盘与决策域（reviewService）；与版本页联动。"
+      />
 
       <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="font-medium text-slate-900">Recent decisions</h2>
@@ -56,7 +56,6 @@ export default function ProjectReviewsTabPage({ params }: { params: { projectId:
           )}
         </div>
       </section>
-    </PageContainer>
+    </>
   );
 }
-

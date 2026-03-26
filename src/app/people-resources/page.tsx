@@ -1,15 +1,7 @@
-import { PageContainer } from '@/components/layout/page-container';
-import { PeopleResourcesWorkbench } from '@/components/resources/people-resources-workbench';
-import { PageHeader } from '@/components/ui/page-header';
+import { redirect } from 'next/navigation';
+import { LEGACY_BRIDGE_ROUTE_ID } from '@/lib/constants/legacy-routing';
 
-export default function PeopleResourcesPage() {
-  return (
-    <PageContainer>
-      <PageHeader
-        title="People & Resources"
-        description="Project-facing resource center for people records, roles, capacity, allocations, hiring gaps and sensitive cost placeholders."
-      />
-      <PeopleResourcesWorkbench />
-    </PageContainer>
-  );
+/** @deprecated 全局人员资源页已下线；请使用项目内「资源」页签（人员区块）。 */
+export default function LegacyPeopleResourcesPage() {
+  redirect(`/projects/${LEGACY_BRIDGE_ROUTE_ID}/resources?from=legacy-global-people-resources`);
 }

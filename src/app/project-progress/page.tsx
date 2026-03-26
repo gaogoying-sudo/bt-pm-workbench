@@ -1,13 +1,7 @@
-import { PageContainer } from '@/components/layout/page-container';
-import { ProjectProgressWorkbench } from '@/components/project-progress/project-progress-workbench';
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
+import { LEGACY_BRIDGE_ROUTE_ID } from '@/lib/constants/legacy-routing';
 
-export default function ProjectProgressPage() {
-  return (
-    <PageContainer>
-      <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading project progress…</div>}>
-        <ProjectProgressWorkbench />
-      </Suspense>
-    </PageContainer>
-  );
+/** @deprecated 全局进度中心已下线；请使用项目内「进度」页签。 */
+export default function LegacyProjectProgressPage() {
+  redirect(`/projects/${LEGACY_BRIDGE_ROUTE_ID}/progress?from=legacy-global-project-progress`);
 }

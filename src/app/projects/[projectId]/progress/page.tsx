@@ -1,6 +1,4 @@
-import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/ui/page-header';
-import { ProjectDetailTabs } from '@/components/projects/project-detail-tabs';
 import { ProjectProgressWorkbench } from '@/components/project-progress/project-progress-workbench';
 import { Suspense } from 'react';
 import { manpowerProjects } from '@/data/manpower/manpower-projects';
@@ -13,16 +11,15 @@ export default function ProjectProgressTabPage({ params }: { params: { projectId
   if (!exists) notFound();
 
   return (
-    <PageContainer>
-      <ProjectDetailTabs projectId={params.projectId} activeKey="progress" />
+    <>
       <PageHeader
         title="Project Progress / 项目进度"
-        description="项目内进度视角：复用快照对比、阶段拆解、质量与风险聚合。"
+        description="消费 project_progress_snapshot + 快照与治理域、风险与质量域。"
       />
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading progress…</div>}>
         <ProjectProgressWorkbench fixedProjectId={canonicalId} hideProjectFilter />
       </Suspense>
-    </PageContainer>
+    </>
   );
 }
 

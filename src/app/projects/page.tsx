@@ -4,13 +4,15 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { SnapshotContextPanel } from '@/components/shared/snapshot-context-panel';
 import { SourceContextPanel } from '@/components/shared/source-context-panel';
-import { projectService } from '@/server/services/project-service';
+import { readModelService } from '@/server/read-models/read-model-service';
 import { buildSnapshotContext } from '@/lib/snapshots/snapshot-helpers';
 import { formatDate } from '@/lib/utils/format';
 
 export default function ProjectsPage() {
-  const projects = projectService.listProjects();
-  const snapshotContext = buildSnapshotContext({ notes: '项目列表通过 project-service 统一获取。' });
+  const { projects, readModelKey, generatedAt } = readModelService.getProjectListSnapshot();
+  const snapshotContext = buildSnapshotContext({
+    notes: `项目列表 read model: ${readModelKey} @ ${generatedAt}（项目主数据域 + executive list）。`
+  });
 
   return (
     <PageContainer>
@@ -59,8 +61,8 @@ export default function ProjectsPage() {
         <SourceContextPanel
           title="数据来源 / Source Context"
           sources={[
-            { name: 'project-service', detail: '统一项目服务层，融合 base project + manpower project + unified identity。' },
-            { name: 'unified-project-registry', detail: '统一项目身份注册表，消除 projectIdMap。' }
+            { name: readModelKey, detail: `生成时间 ${generatedAt}；底层仍经 projectService.listProjects。` },
+            { name: 'unified-project-registry', detail: '统一项目身份注册表。' }
           ]}
         />
         <SnapshotContextPanel title="快照口径 / Snapshot Context" context={snapshotContext} />

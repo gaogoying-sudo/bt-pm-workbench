@@ -1,27 +1,18 @@
 import Link from 'next/link';
-import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/ui/page-header';
-import { ProjectDetailTabs } from '@/components/projects/project-detail-tabs';
-import { buildVersionGovernanceRecords } from '@/lib/version-governance/version-governance-builders';
-import { projectVersionLinkRecords } from '@/data/project-progress/project-version-link-records';
-import { resolveProjectId } from '@/lib/identity/unified-project-registry';
+import { readModelService } from '@/server/read-models/read-model-service';
 
 export default function ProjectVersionTabPage({ params }: { params: { projectId: string } }) {
-  const canonicalId = resolveProjectId(params.projectId);
-  const links = projectVersionLinkRecords.filter((l) => l.projectId === canonicalId);
-  const linkedVersionIds = new Set(links.map((l) => l.linkedVersionId));
-
-  const governancePack = buildVersionGovernanceRecords();
-  const records = governancePack.records.filter((r) => linkedVersionIds.has(r.linkedVersionId));
+  const pack = readModelService.getVersionGovernanceSnapshot(params.projectId);
+  const records = pack.governanceRecords;
 
   const percentFormatter = new Intl.NumberFormat('zh-CN', { style: 'percent', maximumFractionDigits: 0 });
 
   return (
-    <PageContainer>
-      <ProjectDetailTabs projectId={params.projectId} activeKey="version" />
+    <>
       <PageHeader
         title="Project Version / 版本治理"
-        description="项目内版本关联的治理状态、发布准备度与风险信号聚合（v0 mock）。"
+        description="消费 version_governance_snapshot + 项目主数据 / 风险与质量 / 外部协同（readiness）。"
       />
 
       <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
@@ -78,7 +69,7 @@ export default function ProjectVersionTabPage({ params }: { params: { projectId:
           </table>
         </div>
       </section>
-    </PageContainer>
+    </>
   );
 }
 

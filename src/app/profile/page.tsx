@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 import { useCurrentUser } from '@/components/identity/current-user-provider';
@@ -13,7 +14,10 @@ export default function ProfilePage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Profile / 个人资料" description="展示当前用户的基础档案信息（mock/seed）。" />
+      <PageHeader
+        title="Profile / 个人资料"
+        description="身份与组织域只读视图：当前用户来自 identity-registry；人员主数据见 GET /api/persons。"
+      />
 
       <section className="mt-4 grid gap-4 md:grid-cols-3">
         <InfoCard title="User ID" value={currentUserId} />
@@ -24,7 +28,11 @@ export default function ProfilePage() {
       <section className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="font-medium text-slate-900">Identity bindings</h2>
         <p className="mt-2 text-sm text-slate-600">
-          当前版本只展示本地身份上下文；飞书绑定/组织同步 UI 与深度映射会在第 2 包继续补齐。
+          飞书绑定与组织同步仍为后续小任务；主数据可通过{' '}
+          <Link className="text-blue-700" href="/api/persons">
+            /api/persons
+          </Link>{' '}
+          校验。
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2">

@@ -1,6 +1,4 @@
-import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/ui/page-header';
-import { ProjectDetailTabs } from '@/components/projects/project-detail-tabs';
 import { PeopleResourcesWorkbench } from '@/components/resources/people-resources-workbench';
 import { ManpowerCostWorkbench } from '@/components/manpower/manpower-cost-workbench';
 import { Suspense } from 'react';
@@ -14,11 +12,10 @@ export default function ProjectResourcesTabPage({ params }: { params: { projectI
   if (!exists) notFound();
 
   return (
-    <PageContainer>
-      <ProjectDetailTabs projectId={params.projectId} activeKey="resources" />
+    <>
       <PageHeader
         title="Project Resources / 资源与成本"
-        description="项目视角资源中心：人员负载、角色归属、allocation 与成本对比（v0 mock）。"
+        description="消费 resource_manpower_snapshot + 身份与组织域（人员）与资源与人力投入域。"
       />
 
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading people resources…</div>}>
@@ -28,7 +25,7 @@ export default function ProjectResourcesTabPage({ params }: { params: { projectI
       <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading manpower cost…</div>}>
         <ManpowerCostWorkbench fixedProjectId={canonicalId} hideProjectFilter />
       </Suspense>
-    </PageContainer>
+    </>
   );
 }
 
