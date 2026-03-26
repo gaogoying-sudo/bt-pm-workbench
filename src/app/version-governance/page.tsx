@@ -1,13 +1,7 @@
-import { PageContainer } from '@/components/layout/page-container';
-import { VersionGovernanceWorkbench } from '@/components/version-governance/version-governance-workbench';
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
+import { LEGACY_BRIDGE_ROUTE_ID } from '@/lib/constants/legacy-routing';
 
-export default function VersionGovernancePage() {
-  return (
-    <PageContainer>
-      <Suspense fallback={<div className="p-4 text-sm text-slate-500">Loading version governance…</div>}>
-        <VersionGovernanceWorkbench />
-      </Suspense>
-    </PageContainer>
-  );
+/** @deprecated 全局版本治理已下线；请使用项目内「版本」页签。 */
+export default function LegacyVersionGovernancePage() {
+  redirect(`/projects/${LEGACY_BRIDGE_ROUTE_ID}/version?from=legacy-global-version-governance`);
 }

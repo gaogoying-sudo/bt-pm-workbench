@@ -1,15 +1,7 @@
-import { PageContainer } from '@/components/layout/page-container';
-import { TaskExecutionWorkbench } from '@/components/task-execution/task-execution-workbench';
-import { PageHeader } from '@/components/ui/page-header';
+import { redirect } from 'next/navigation';
+import { LEGACY_BRIDGE_ROUTE_ID } from '@/lib/constants/legacy-routing';
 
-export default function TaskExecutionPage() {
-  return (
-    <PageContainer>
-      <PageHeader
-        title="Task Execution"
-        description="Execution center for project-stage-task chains, owners, dependencies, risks and progress placeholders."
-      />
-      <TaskExecutionWorkbench />
-    </PageContainer>
-  );
+/** @deprecated 全局任务执行入口已下线；请使用项目内「执行」页签。 */
+export default function LegacyTaskExecutionPage() {
+  redirect(`/projects/${LEGACY_BRIDGE_ROUTE_ID}/execution?from=legacy-global-task-execution`);
 }

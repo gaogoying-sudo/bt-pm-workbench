@@ -7,42 +7,25 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: '核心运行视图 / Core Views',
+    label: '一级入口 / Primary',
     items: [
-      ['驾驶舱 / Dashboard', '/dashboard'],
+      ['登录 / Login', '/login'],
+      ['我的工作台 / Me', '/me'],
       ['项目列表 / Projects', '/projects'],
-      ['任务执行 / Task Execution', '/task-execution'],
-      ['项目进度 / Project Progress', '/project-progress'],
-      ['版本推进 / Version Governance', '/version-governance'],
-      ['管理驾驶舱 / Executive Dashboard', '/executive-dashboard']
-    ]
-  },
-  {
-    label: '资源与成本 / Resources & Cost',
-    items: [
-      ['人员与资源 / People & Resources', '/people-resources'],
-      ['人力成本 / Manpower Cost', '/manpower-cost']
-    ]
-  },
-  {
-    label: '索引与治理 / Index & Governance',
-    items: [
-      ['最终验收 / Closeout', '/closeout'],
       ['输入收件箱 / Input Inbox', '/input-inbox'],
-      ['导入导出 / Data Exchange', '/data-exchange'],
-      ['任务索引 / Tasks (Legacy)', '/tasks'],
-      ['版本索引 / Versions', '/versions'],
-      ['文档索引 / Docs Index', '/docs-index'],
-      ['变更记录 / Change Log', '/change-log']
+      ['管理驾驶舱 / Executive Dashboard', '/executive-dashboard'],
+      ['导入导出 / Data Exchange', '/data-exchange']
     ]
   },
   {
     label: '辅助 / Auxiliary',
     items: [
-      ['参考资料 / References', '/references'],
-      ['设置 / Settings', '/settings']
+      ['新建项目 / Projects New', '/projects/new'],
+      ['个人资料 / Profile', '/profile'],
+      ['后台管理 / Admin', '/admin']
     ]
-  }
+  },
+  // Legacy/旧能力页面不进入主导航：通过内部 redirect/提示或项目内页签替代。
 ];
 
 export function Sidebar() {

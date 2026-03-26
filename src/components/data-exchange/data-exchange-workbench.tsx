@@ -23,6 +23,15 @@ export function DataExchangeWorkbench() {
   const [busy, setBusy] = useState(false);
   const [lastPreview, setLastPreview] = useState<any>(null);
 
+  const projectIdForReturnLink = useMemo(() => {
+    try {
+      const parsed = JSON.parse(rawJson);
+      return parsed?.projectId ?? null;
+    } catch {
+      return null;
+    }
+  }, [rawJson]);
+
   async function refresh() {
     const m = await getJson('/api/data-exchange');
     const ij = await getJson('/api/data-exchange/import/jobs');
@@ -182,6 +191,22 @@ export function DataExchangeWorkbench() {
           </div>
         </article>
       </section>
+
+      {projectIdForReturnLink ? (
+        <section className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-slate-600">结果回看</div>
+            <div className="flex flex-wrap gap-3">
+              <Link className="text-blue-700" href={`/projects/${projectIdForReturnLink}`}>
+                去项目 / Project
+              </Link>
+              <Link className="text-blue-700" href={`/projects/${projectIdForReturnLink}/version`}>
+                去版本治理 / Version
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

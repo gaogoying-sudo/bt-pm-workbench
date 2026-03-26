@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { SnapshotContextPanel } from '@/components/shared/snapshot-context-panel';
@@ -7,7 +6,7 @@ import { SourceContextPanel } from '@/components/shared/source-context-panel';
 import { documentRecords } from '@/data/docs';
 import { tasks } from '@/data/tasks';
 import { versions } from '@/data/versions';
-import { buildProjectDetailSnapshot } from '@/lib/project-detail/project-detail-builders';
+import { readModelService } from '@/server/read-models/read-model-service';
 import { buildProjectStageProgressSnapshots } from '@/lib/project-progress/project-progress-builders';
 import { resolveProjectId, getProjectIdentity } from '@/lib/identity/unified-project-registry';
 import { qualityService } from '@/server/services/quality-service';
@@ -16,7 +15,6 @@ import { buildProjectExternalReadinessSummaries } from '@/lib/integrations/readi
 import { dataExchangeRepository } from '@/server/repositories/data-exchange-repository';
 import { reviewService } from '@/server/services/review-service';
 import { AlertPanel } from '@/components/alerting/alert-panel';
-
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
   minimumFractionDigits: 0,
@@ -30,7 +28,7 @@ const currencyFormatter = new Intl.NumberFormat('zh-CN', {
 });
 
 export default function ProjectDetailPage({ params }: { params: { projectId: string } }) {
-  const snapshot = buildProjectDetailSnapshot(params.projectId);
+  const snapshot = readModelService.getProjectDetailSnapshot(params.projectId);
   if (!snapshot) notFound();
 
   const identity = getProjectIdentity(params.projectId);
@@ -54,8 +52,8 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
   const reviewPack = reviewService.listPack({ projectId: canonicalId });
 
   return (
-    <PageContainer>
-      <PageHeader title={`${snapshot.projectName} / Project Detail`} description={snapshot.basicSummary} />
+    <>
+      <PageHeader title="概览 / Overview" description="项目中枢摘要：消费 project_detail_snapshot + 各域聚合。" />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <article className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">
@@ -258,6 +256,6 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
         />
         <SnapshotContextPanel title="快照口径 / Snapshot Context" context={snapshot.snapshotContext} />
       </section>
-    </PageContainer>
+    </>
   );
 }

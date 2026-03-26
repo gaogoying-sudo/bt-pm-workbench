@@ -67,8 +67,14 @@ function projectStatusTone(status: ManpowerProjectStatus) {
   return 'muted' as const;
 }
 
-export function ManpowerCostWorkbench() {
-  const [selectedProjectId, setSelectedProjectId] = useState(manpowerProjects[0]?.id ?? '');
+export function ManpowerCostWorkbench({
+  fixedProjectId,
+  hideProjectFilter
+}: {
+  fixedProjectId?: string;
+  hideProjectFilter?: boolean;
+}) {
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(fixedProjectId ?? manpowerProjects[0]?.id ?? '');
   const [selectedStatus, setSelectedStatus] = useState<ManpowerProjectStatus | 'all'>('all');
   const [selectedRoleId, setSelectedRoleId] = useState('all');
   const [selectedVersionId, setSelectedVersionId] = useState('all');
@@ -77,6 +83,7 @@ export function ManpowerCostWorkbench() {
   const [roleDrafts, setRoleDrafts] = useState<EngineerRoleConfig[]>(manpowerRoleConfigs);
 
   const filteredProjects = manpowerProjects.filter((project) => {
+    if (fixedProjectId && project.id !== fixedProjectId) return false;
     if (selectedStatus !== 'all' && project.status !== selectedStatus) return false;
     if (selectedVersionId !== 'all' && project.currentPlanVersionId !== selectedVersionId) return false;
 
@@ -91,10 +98,14 @@ export function ManpowerCostWorkbench() {
   });
 
   useEffect(() => {
+    if (fixedProjectId) {
+      setSelectedProjectId(fixedProjectId);
+      return;
+    }
     if (!filteredProjects.some((project) => project.id === selectedProjectId)) {
       setSelectedProjectId(filteredProjects[0]?.id ?? manpowerProjects[0]?.id ?? '');
     }
-  }, [filteredProjects, selectedProjectId]);
+  }, [filteredProjects, selectedProjectId, fixedProjectId]);
 
   const selectedProject =
     filteredProjects.find((project) => project.id === selectedProjectId) ?? filteredProjects[0] ?? manpowerProjects[0];
@@ -198,20 +209,22 @@ export function ManpowerCostWorkbench() {
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-          <div className="min-w-[180px] flex-1">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
-            <select
-              value={selectedProjectId}
-              onChange={(event) => setSelectedProjectId(event.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            >
-              {filteredProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!hideProjectFilter && !fixedProjectId ? (
+            <div className="min-w-[180px] flex-1">
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
+              <select
+                value={selectedProjectId}
+                onChange={(event) => setSelectedProjectId(event.target.value)}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              >
+                {filteredProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <div className="min-w-[160px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">状态筛选 / Status Filter</label>
             <select
