@@ -52,11 +52,17 @@ function maskValue(value: string) {
   return value.length <= 4 ? '****' : `${value.slice(0, 2)}****${value.slice(-1)}`;
 }
 
-export function PeopleResourcesWorkbench() {
+export function PeopleResourcesWorkbench({
+  fixedProjectId,
+  hideProjectFilter
+}: {
+  fixedProjectId?: string;
+  hideProjectFilter?: boolean;
+}) {
   const [selectedPersonId, setSelectedPersonId] = useState(peopleResources[0]?.id ?? '');
   const [selectedStatus, setSelectedStatus] = useState<PersonResourceStatus | 'all'>('all');
   const [selectedRole, setSelectedRole] = useState<string | 'all'>('all');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>('all');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>(fixedProjectId ?? 'all');
   const [selectedAvailability, setSelectedAvailability] = useState<AvailabilityStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<(typeof commonViewModes.resource)[number]>(commonViewModes.resource[0]);
 
@@ -69,10 +75,14 @@ export function PeopleResourcesWorkbench() {
   });
 
   useEffect(() => {
+    if (fixedProjectId) {
+      setSelectedProjectId((prev) => (prev === fixedProjectId ? prev : fixedProjectId));
+      return;
+    }
     if (!filteredPeople.some((person) => person.id === selectedPersonId)) {
       setSelectedPersonId(filteredPeople[0]?.id ?? peopleResources[0]?.id ?? '');
     }
-  }, [filteredPeople, selectedPersonId]);
+  }, [filteredPeople, selectedPersonId, fixedProjectId]);
 
   const selectedPerson =
     filteredPeople.find((person) => person.id === selectedPersonId) ?? filteredPeople[0] ?? peopleResources[0];
@@ -153,17 +163,19 @@ export function PeopleResourcesWorkbench() {
               ))}
             </select>
           </div>
-          <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
-            <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">全部项目 / All Projects</option>
-              {manpowerProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!hideProjectFilter && !fixedProjectId ? (
+            <div className="min-w-[160px]">
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
+              <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+                <option value="all">全部项目 / All Projects</option>
+                {manpowerProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <div className="min-w-[180px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">可用性筛选 / Availability Filter</label>
             <select value={selectedAvailability} onChange={(event) => setSelectedAvailability(event.target.value as AvailabilityStatus | 'all')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">

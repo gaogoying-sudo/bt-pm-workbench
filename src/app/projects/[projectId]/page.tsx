@@ -16,6 +16,7 @@ import { buildProjectExternalReadinessSummaries } from '@/lib/integrations/readi
 import { dataExchangeRepository } from '@/server/repositories/data-exchange-repository';
 import { reviewService } from '@/server/services/review-service';
 import { AlertPanel } from '@/components/alerting/alert-panel';
+import { ProjectDetailTabs } from '@/components/projects/project-detail-tabs';
 
 const percentFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'percent',
@@ -56,6 +57,7 @@ export default function ProjectDetailPage({ params }: { params: { projectId: str
   return (
     <PageContainer>
       <PageHeader title={`${snapshot.projectName} / Project Detail`} description={snapshot.basicSummary} />
+      <ProjectDetailTabs projectId={params.projectId} activeKey="overview" />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <article className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">

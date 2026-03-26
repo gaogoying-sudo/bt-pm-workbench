@@ -29,14 +29,20 @@ const percentFormatter = new Intl.NumberFormat('zh-CN', {
   maximumFractionDigits: 0
 });
 
-export function ProjectProgressWorkbench() {
+export function ProjectProgressWorkbench({
+  fixedProjectId,
+  hideProjectFilter
+}: {
+  fixedProjectId?: string;
+  hideProjectFilter?: boolean;
+}) {
   const searchParams = useSearchParams();
   const snapshotDateParam = searchParams.get('snapshotDate') ?? undefined;
   const baselineDateParam = searchParams.get('baselineDate') ?? undefined;
   const compareDateParam = searchParams.get('compareDate') ?? undefined;
 
   const progressSnapshots = useMemo(() => buildProjectProgressSnapshots(projectVersionLinkRecords), []);
-  const [selectedProjectId, setSelectedProjectId] = useState(progressSnapshots[0]?.projectId ?? '');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(fixedProjectId ?? progressSnapshots[0]?.projectId ?? '');
   const [selectedStatus, setSelectedStatus] = useState<string | 'all'>('all');
   const [selectedRisk, setSelectedRisk] = useState<string | 'all'>('all');
   const [selectedStageId, setSelectedStageId] = useState<string | 'all'>('all');
@@ -44,6 +50,7 @@ export function ProjectProgressWorkbench() {
   const [viewMode, setViewMode] = useState<(typeof commonViewModes.progress)[number]>(commonViewModes.progress[0]);
 
   const filteredSnapshots = progressSnapshots.filter((snapshot) => {
+    if (fixedProjectId && snapshot.projectId !== fixedProjectId) return false;
     if (selectedStatus !== 'all' && snapshot.progressStatus !== selectedStatus) return false;
     if (selectedRisk !== 'all' && snapshot.resourcePressureLevel !== selectedRisk) return false;
     if (selectedStageId !== 'all' && snapshot.currentStageId !== selectedStageId) return false;
@@ -52,10 +59,14 @@ export function ProjectProgressWorkbench() {
   });
 
   useEffect(() => {
+    if (fixedProjectId) {
+      setSelectedProjectId(fixedProjectId);
+      return;
+    }
     if (!filteredSnapshots.some((snapshot) => snapshot.projectId === selectedProjectId)) {
       setSelectedProjectId(filteredSnapshots[0]?.projectId ?? progressSnapshots[0]?.projectId ?? '');
     }
-  }, [filteredSnapshots, progressSnapshots, selectedProjectId]);
+  }, [filteredSnapshots, progressSnapshots, selectedProjectId, fixedProjectId]);
 
   const selectedSnapshot =
     filteredSnapshots.find((snapshot) => snapshot.projectId === selectedProjectId) ??
@@ -145,16 +156,18 @@ export function ProjectProgressWorkbench() {
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-          <div className="min-w-[180px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
-            <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              {filteredSnapshots.map((snapshot) => (
-                <option key={snapshot.projectId} value={snapshot.projectId}>
-                  {manpowerProjects.find((project) => project.id === snapshot.projectId)?.name ?? snapshot.projectId}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!hideProjectFilter && !fixedProjectId ? (
+            <div className="min-w-[180px]">
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
+              <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+                {filteredSnapshots.map((snapshot) => (
+                  <option key={snapshot.projectId} value={snapshot.projectId}>
+                    {manpowerProjects.find((project) => project.id === snapshot.projectId)?.name ?? snapshot.projectId}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <div className="min-w-[180px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">状态筛选 / Status Filter</label>
             <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">

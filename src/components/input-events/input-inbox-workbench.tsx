@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { InfoCard } from '@/components/ui/info-card';
 import { SnapshotContextPanel } from '@/components/shared/snapshot-context-panel';
@@ -57,6 +58,11 @@ export function InputInboxWorkbench() {
   useEffect(() => {
     refresh();
   }, []);
+
+  const projectIdForReturnLink = useMemo(() => {
+    const firstWithProjectId = confirmed.find((evt) => typeof evt?.payload?.projectId === 'string' && (evt.payload.projectId as string).trim());
+    return firstWithProjectId?.payload?.projectId ?? null;
+  }, [confirmed]);
 
   async function capture() {
     if (!rawText.trim()) return;
@@ -283,6 +289,22 @@ export function InputInboxWorkbench() {
         </article>
         <SnapshotContextPanel title="快照口径 / Snapshot Context" context={snapshotContext} />
       </section>
+
+      {projectIdForReturnLink ? (
+        <section className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-slate-600">确认写回后回到哪里</div>
+            <div className="flex flex-wrap gap-3">
+              <Link className="text-blue-700" href={`/projects/${projectIdForReturnLink}`}>
+                去项目 / Project
+              </Link>
+              <Link className="text-blue-700" href="/executive-dashboard">
+                去驾驶舱 / Dashboard
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

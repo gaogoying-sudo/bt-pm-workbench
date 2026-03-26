@@ -56,16 +56,27 @@ function riskTone(level: 'low' | 'medium' | 'high') {
   return 'success' as const;
 }
 
-export function TaskExecutionWorkbench() {
+export function TaskExecutionWorkbench({
+  fixedProjectId,
+  hideProjectFilter
+}: {
+  fixedProjectId?: string;
+  hideProjectFilter?: boolean;
+}) {
   const { context } = useCurrentUser();
   const [selectedTaskId, setSelectedTaskId] = useState(taskExecutionRecords[0]?.id ?? '');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>('all');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>(fixedProjectId ?? 'all');
   const [selectedStageId, setSelectedStageId] = useState<string | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all');
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority | 'all'>('all');
   const [selectedOwnerId, setSelectedOwnerId] = useState<string | 'all'>('all');
   const [viewMode, setViewMode] = useState<(typeof commonViewModes.task)[number]>(commonViewModes.task[0]);
   const [recentConfirmedEvents, setRecentConfirmedEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!fixedProjectId) return;
+    setSelectedProjectId((prev) => (prev === fixedProjectId ? prev : fixedProjectId));
+  }, [fixedProjectId]);
 
   const filteredTasks = taskExecutionRecords.filter((task) => {
     if (context.projectScope.mode !== 'all' && context.projectScope.projectIds.length > 0) {
@@ -162,17 +173,19 @@ export function TaskExecutionWorkbench() {
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-          <div className="min-w-[160px]">
-            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
-            <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              <option value="all">全部项目 / All Projects</option>
-              {manpowerProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!hideProjectFilter && !fixedProjectId ? (
+            <div className="min-w-[160px]">
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">项目筛选 / Project Filter</label>
+              <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+                <option value="all">全部项目 / All Projects</option>
+                {manpowerProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <div className="min-w-[180px]">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">阶段筛选 / Stage Filter</label>
             <select value={selectedStageId} onChange={(event) => setSelectedStageId(event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
